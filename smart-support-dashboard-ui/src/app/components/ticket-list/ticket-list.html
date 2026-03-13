@@ -1,0 +1,33 @@
+﻿<div class="dashboard-container">
+  <h2>Tickets Recientes</h2>
+
+  <!-- Nota los paréntesis () en tickets() -->
+  <div *ngIf="tickets().length === 0">
+    <p class="no-tickets">No hay tickets disponibles. ¡Todo está tranquilo!</p>
+  </div>
+
+  <div class="tickets-grid" *ngIf="tickets().length > 0">
+
+    <div class="ticket-card" *ngFor="let ticket of tickets()">
+      <div class="card-header">
+        <h3>{{ ticket.title }}</h3>
+        <span class="status-badge">{{ ticket.status }}</span>
+      </div>
+
+      <p class="description">{{ ticket.description }}</p>
+
+      <p class="summary"><strong>Resumen IA:</strong> {{ ticket.aiSummary }}</p>
+
+      <div class="ai-tags">
+        <span class="tag category">🏷️ {{ ticket.aiCategory }}</span>
+        <span class="tag priority">⚠️ Prioridad: {{ ticket.aiPriority }}</span>
+        <span class="tag tone">👤 Tono: {{ ticket.aiTone }}</span>
+      </div>
+
+      <div class="card-footer">
+        <small>De: {{ ticket.customerEmail }}</small>
+      </div>
+    </div>
+
+  </div>
+</div>
