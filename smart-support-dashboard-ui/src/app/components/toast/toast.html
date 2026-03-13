@@ -1,0 +1,6 @@
+<!-- Solo se dibuja si el servicio tiene un mensaje -->
+@if (toastService.currentToast(); as toast) {
+  <div class="toast-container" [ngClass]="toast.type">
+    <span>{{ toast.message }}</span>
+  </div>
+}

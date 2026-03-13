@@ -1,8 +1,7 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TicketService } from '../../services/ticket';
 import { Ticket } from '../../models/ticket.model';
-//en esto se le dice al componente que, en cuanto nazca (cuando cargue la página), llame a la API para pedir los tickets.
 
 @Component({
   selector: 'app-ticket-list',
@@ -12,9 +11,25 @@ import { Ticket } from '../../models/ticket.model';
 })
 export class TicketList implements OnInit {
 
-  // 1. Usamos 'signal' en lugar de un array normal.
-  // Un Signal es como un altavoz que le grita a la pantalla "¡Hey, tengo datos nuevos, dibújate de nuevo!"
+  // La lista original con TODOS los tickets de la base de datos
   tickets = signal<Ticket[]>([]);
+
+  // Guardamos cuál es el filtro actual. Por defecto es 'Todos'
+  activeFilter = signal<string>('Todos');
+
+  // LA MAGIA: Una lista computada que se filtra automáticamente
+  // si 'tickets' o 'activeFilter' cambian.
+  filteredTickets = computed(() => {
+    const currentFilter = this.activeFilter();
+    const allTickets = this.tickets();
+
+    if (currentFilter === 'Todos') {
+      return allTickets;
+    }
+
+    // Si no es 'Todos', filtramos donde la prioridad de la IA coincida con el botón
+    return allTickets.filter(ticket => ticket.aiPriority === currentFilter);
+  });
 
   private ticketService = inject(TicketService);
 
@@ -25,13 +40,16 @@ export class TicketList implements OnInit {
   loadTickets(): void {
     this.ticketService.getAllTickets().subscribe({
       next: (data) => {
-        // 2. Así se meten los datos en un Signal
         this.tickets.set(data);
-        console.log('Tickets cargados:', data);
       },
       error: (error) => {
         console.error('Error al cargar tickets:', error);
       }
     });
+  }
+
+  // Función para cambiar el filtro cuando el usuario haga clic en un botón
+  setFilter(priority: string) {
+    this.activeFilter.set(priority);
   }
 }

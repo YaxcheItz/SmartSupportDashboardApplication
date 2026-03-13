@@ -1,14 +1,35 @@
 ﻿<div class="dashboard-container">
-  <h2>Tickets Recientes</h2>
+  <div class="dashboard-header">
+    <h2>Tickets Recientes</h2>
 
-  <!-- Nota los paréntesis () en tickets() -->
-  <div *ngIf="tickets().length === 0">
-    <p class="no-tickets">No hay tickets disponibles. ¡Todo está tranquilo!</p>
+    <!-- BARRA DE FILTROS -->
+    <div class="filter-bar">
+      <button (click)="setFilter('Todos')" [class.active]="activeFilter() === 'Todos'">
+        Todos
+      </button>
+
+      <button (click)="setFilter('Urgente')" [class.active]="activeFilter() === 'Urgente'">
+        Urgente
+      </button>
+
+      <button (click)="setFilter('Alta')" [class.active]="activeFilter() === 'Alta'">Alta</button>
+
+      <button (click)="setFilter('Media')" [class.active]="activeFilter() === 'Media'">
+        Media
+      </button>
+
+      <button (click)="setFilter('Baja')" [class.active]="activeFilter() === 'Baja'">Baja</button>
+    </div>
   </div>
 
-  <div class="tickets-grid" *ngIf="tickets().length > 0">
+  <!-- Si no hay tickets en general o si el filtro actual dejó la lista vacía -->
+  <div *ngIf="filteredTickets().length === 0">
+    <p class="no-tickets">No hay tickets disponibles para esta prioridad. ¡Todo está tranquilo!</p>
+  </div>
 
-    <div class="ticket-card" *ngFor="let ticket of tickets()">
+  <!-- CAMBIO CLAVE: Ahora iteramos sobre filteredTickets() en lugar de tickets() -->
+  <div class="tickets-grid" *ngIf="filteredTickets().length > 0">
+    <div class="ticket-card" *ngFor="let ticket of filteredTickets()">
       <div class="card-header">
         <h3>{{ ticket.title }}</h3>
         <span class="status-badge">{{ ticket.status }}</span>
@@ -28,6 +49,5 @@
         <small>De: {{ ticket.customerEmail }}</small>
       </div>
     </div>
-
   </div>
 </div>
