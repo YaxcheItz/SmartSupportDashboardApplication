@@ -1,2 +1,13 @@
-﻿<h1>¡Mi Dashboard Inteligente!</h1>
-<app-ticket-list></app-ticket-list>
+﻿<nav class="navbar">
+  <div class="nav-brand">🚀 Smart Support IA</div>
+  <div class="nav-links">
+    <!-- RouterLink cambia la URL sin recargar la página -->
+    <a routerLink="/dashboard" routerLinkActive="active-link">Panel de Agentes</a>
+    <a routerLink="/nuevo-ticket" routerLinkActive="active-link">Crear Ticket</a>
+  </div>
+</nav>
+
+<!-- El contenido principal (el Dashboard o el Formulario) aparecerá aquí adentro -->
+<main class="main-content">
+  <router-outlet></router-outlet>
+</main>
