@@ -32,37 +32,39 @@ public class GeminiAiService {
     // Este es el método principal que usaremos
     public String analyzeTicket(String ticketDescription) {
         try {
-            // 1. Construimos la URL completa con nuestra llave secreta
             String url = apiUrl + "?key=" + apiKey;
 
-            // 2. Preparamos los Headers (Cabeceras)
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            // 3. Creamos el Prompt (Las instrucciones para la IA)
-            // Le pedimos que actúe como un experto y que SOLO nos devuelva la Categoría y Prioridad separadas por una coma.
-            String prompt = "Eres un asistente experto en soporte técnico. Lee esta descripción de un problema de un cliente y clasifícalo.\n" +
-                    "Descripción: '" + ticketDescription + "'\n" +
-                    "Devuelve SOLO el resultado en este formato exacto: CATEGORIA,PRIORIDAD\n" +
-                    "Ejemplo: Facturación,Alta\n" +
-                    "Categorías posibles: Facturación, Soporte Técnico, Ventas, Queja, Otro.\n" +
-                    "Prioridades posibles: Baja, Media, Alta, Urgente.";
+            // EL NUEVO PROMPT: Le pedimos a la IA que actúe como una API y nos devuelva un JSON
+            String prompt = "Eres un asistente experto en soporte técnico. Lee esta descripción de un problema de un cliente: '" + ticketDescription + "'.\n" +
+                    "Tu ÚNICO trabajo es responder con un objeto JSON válido, sin usar bloques de código Markdown (```json...), solo el texto JSON plano.\n" +
+                    "El JSON DEBE tener exactamente esta estructura y claves:\n" +
+                    "{\n" +
+                    "  \"category\": \"(elige entre: Facturación, Soporte Técnico, Ventas, Queja, Spam, Otro)\",\n" +
+                    "  \"priority\": \"(elige entre: Baja, Media, Alta, Urgente)\",\n" +
+                    "  \"tone\": \"(elige entre: Enojado, Frustrado, Preocupado, Neutral, Feliz)\",\n" +
+                    "  \"summary\": \"(escribe un resumen del problema en máximo 15 palabras)\"\n" +
+                    "}\n" +
+                    "Si el texto no tiene sentido (ej. 'asdasd'), pon la categoría 'Spam', prioridad 'Baja' y tono 'Neutral'.";
 
-            // 4. Construimos el JSON (el "Body") exactamente como Google lo exige
+            // Aseguramos que las comillas dobles del prompt se escapen correctamente para el JSON final
+            String escapedPrompt = prompt.replace("\"", "\\\"");
+
             String requestBody = "{"
                     + "\"contents\": [{"
-                    + "\"parts\":[{\"text\": \"" + prompt + "\"}]"
+                    + "\"parts\":[{\"text\": \"" + escapedPrompt + "\"}]"
                     + "}]"
                     + "}";
 
-            // 5. Juntamos cabeceras y cuerpo
             HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
-            // 6. Hacemos la llamada (¡Aquí nos conectamos con Google!)
             String response = restTemplate.postForObject(url, requestEntity, String.class);
 
-            // 7. Extraemos la respuesta del texto gigante que nos envía Google
             JsonNode rootNode = objectMapper.readTree(response);
+
+            // La IA nos devuelve un texto que (por nuestras instrucciones) es un JSON
             return rootNode.path("candidates")
                     .get(0)
                     .path("content")
@@ -73,9 +75,9 @@ public class GeminiAiService {
                     .trim();
 
         } catch (Exception e) {
-            // Si algo falla (no hay internet, llave mala, etc.), devolvemos un valor por defecto
             System.err.println("Error al contactar con la IA: " + e.getMessage());
-            return "Sin Categoría,No Asignada";
+            // Si hay error, devolvemos un JSON por defecto para que no explote el programa
+            return "{\"category\":\"Error\",\"priority\":\"Baja\",\"tone\":\"Neutral\",\"summary\":\"Error al contactar IA\"}";
         }
     }
 }

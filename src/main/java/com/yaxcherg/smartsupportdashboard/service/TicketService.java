@@ -21,27 +21,29 @@ public class TicketService {
     }
 
     public Ticket createTicket(Ticket ticket) {
-        // 1. Antes de guardar, le mandamos la descripción a la IA
-        String aiResponse = geminiAiService.analyzeTicket(ticket.getDescription());
+        // 1. La IA nos devuelve ahora un texto en formato JSON
+        String aiResponseJson = geminiAiService.analyzeTicket(ticket.getDescription());
 
-        // 2. La IA nos devolverá algo como "Soporte Técnico,Alta"
-        // Vamos a separar ese texto por la coma (",")
         try {
-            String[] parts = aiResponse.split(",");
-            if (parts.length >= 2) {
-                ticket.setAiCategory(parts[0].trim()); // Posición 0: Categoría
-                ticket.setAiPriority(parts[1].trim()); // Posición 1: Prioridad
-            } else {
-                // Si la IA respondió mal, ponemos algo por defecto
-                ticket.setAiCategory("No detectada");
-                ticket.setAiPriority("Media");
-            }
+            // 2. Usamos Jackson (que ya viene con Spring) para convertir ese texto en un objeto que podamos leer
+            tools.jackson.databind.ObjectMapper mapper = new tools.jackson.databind.ObjectMapper();
+            tools.jackson.databind.JsonNode aiData = mapper.readTree(aiResponseJson);
+
+            // 3. Asignamos los 4 valores leídos de la IA a nuestro Ticket
+            ticket.setAiCategory(aiData.path("category").asText("No detectada"));
+            ticket.setAiPriority(aiData.path("priority").asText("Media"));
+            ticket.setAiTone(aiData.path("tone").asText("Neutral"));
+            ticket.setAiSummary(aiData.path("summary").asText("Sin resumen"));
+
         } catch (Exception e) {
+            System.err.println("Error al leer el JSON de la IA: " + e.getMessage());
             ticket.setAiCategory("Error IA");
             ticket.setAiPriority("Error IA");
+            ticket.setAiTone("Error IA");
+            ticket.setAiSummary("Error IA");
         }
 
-        // 3. ¡Ahora sí, guardamos en la base de datos con la info de la IA!
+        // 4. Guardamos en la base de datos
         return ticketRepository.save(ticket);
     }
 

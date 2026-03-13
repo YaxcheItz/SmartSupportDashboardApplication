@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+#Gemini AI
+src/main/resources/application.properties

@@ -24,6 +24,9 @@ public class Ticket {
     // Estos campos los llenará la IA más adelante
     private String aiCategory;
     private String aiPriority;
+    private String aiTone;
+    @Column(length = 500)
+    private String aiSummary;
 
     // Para saber cuándo se creó el ticket
     @Column(updatable = false)
