@@ -8,33 +8,47 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
-@Service // Le dice a Spring "¡Hey, yo soy el Chef! Inyéctame donde me necesiten."
+@Service
 public class TicketService {
 
-    // 1. Llamamos al despensero
     private final TicketRepository ticketRepository;
+    private final GeminiAiService geminiAiService; // ¡Añadimos a nuestro experto en IA!
 
-    // 2. Inyección de Dependencias: Spring nos da automáticamente el repositorio aquí
     @Autowired
-    public TicketService(TicketRepository ticketRepository) {
+    public TicketService(TicketRepository ticketRepository, GeminiAiService geminiAiService) {
         this.ticketRepository = ticketRepository;
+        this.geminiAiService = geminiAiService; // Lo inyectamos aquí
     }
 
-    // --- MÉTODOS DEL CHEF ---
-
-    // Crear un nuevo ticket
     public Ticket createTicket(Ticket ticket) {
-        // En el futuro: Aquí llamaremos a la IA antes de guardar
-        // ticket.setAiCategory( ia.getCategoria(ticket.getDescription()) );
+        // 1. Antes de guardar, le mandamos la descripción a la IA
+        String aiResponse = geminiAiService.analyzeTicket(ticket.getDescription());
+
+        // 2. La IA nos devolverá algo como "Soporte Técnico,Alta"
+        // Vamos a separar ese texto por la coma (",")
+        try {
+            String[] parts = aiResponse.split(",");
+            if (parts.length >= 2) {
+                ticket.setAiCategory(parts[0].trim()); // Posición 0: Categoría
+                ticket.setAiPriority(parts[1].trim()); // Posición 1: Prioridad
+            } else {
+                // Si la IA respondió mal, ponemos algo por defecto
+                ticket.setAiCategory("No detectada");
+                ticket.setAiPriority("Media");
+            }
+        } catch (Exception e) {
+            ticket.setAiCategory("Error IA");
+            ticket.setAiPriority("Error IA");
+        }
+
+        // 3. ¡Ahora sí, guardamos en la base de datos con la info de la IA!
         return ticketRepository.save(ticket);
     }
 
-    // Obtener todos los tickets
     public List<Ticket> getAllTickets() {
         return ticketRepository.findAll();
     }
 
-    // Obtener un ticket por su ID
     public Optional<Ticket> getTicketById(Long id) {
         return ticketRepository.findById(id);
     }
