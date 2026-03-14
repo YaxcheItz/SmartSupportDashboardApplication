@@ -6,3 +6,43 @@ body {
   background-color: #f5f7fa; /* Un color de fondo gris clarito para que resalten las
     tarjetas blancas */
 }
+
+/* VARIABLES GLOBALES - Modo claro por defecto */
+:root {
+  --bg-color: #f3f4f6;
+  --text-color: #1f2937;
+  --card-bg: #ffffff;
+  --border-color: #e5e7eb;
+  --primary-color: #3b82f6;
+}
+
+/* MODO OSCURO */
+/* Cuando <body> tenga la clase "dark-theme" se activan estos colores */
+.dark-theme {
+  --bg-color: #111827;
+  --text-color: #f9fafb;
+  --card-bg: #1f2937;
+  --border-color: #374151;
+}
+
+/* ESTILOS BASE */
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+  margin: 0;
+  padding: 0;
+
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* TARJETAS Y CONTENEDORES */
+.ticket-card,
+.dashboard-container,
+.detail-container,
+.stats-container {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color);
+}
