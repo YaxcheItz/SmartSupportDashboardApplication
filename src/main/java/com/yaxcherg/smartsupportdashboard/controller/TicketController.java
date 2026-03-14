@@ -4,6 +4,9 @@ import com.yaxcherg.smartsupportdashboard.dto.TicketRequestDTO;
 import com.yaxcherg.smartsupportdashboard.dto.TicketResponseDTO;
 import com.yaxcherg.smartsupportdashboard.service.TicketService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,9 +33,16 @@ public class TicketController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TicketResponseDTO>> getAllTickets() {
-        List<TicketResponseDTO> tickets = ticketService.getAllTickets();
-        return new ResponseEntity<>(tickets, HttpStatus.OK);
+    public ResponseEntity<Page<TicketResponseDTO>> getAllTickets(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        // Creamos la petición de paginación, ordenando por fecha de creación descendente (los más nuevos primero)
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        Page<TicketResponseDTO> ticketsPage = ticketService.getAllTickets(pageRequest);
+
+        return new ResponseEntity<>(ticketsPage, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
@@ -40,6 +50,17 @@ public class TicketController {
         Optional<TicketResponseDTO> ticket = ticketService.getTicketById(id);
 
         return ticket
+                .map(value -> new ResponseEntity<>(value, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    // Nuevo endpoint para marcar un ticket como resuelto
+    @PatchMapping("/{id}/resolve")
+    public ResponseEntity<TicketResponseDTO> resolveTicket(@PathVariable Long id) {
+
+        Optional<TicketResponseDTO> resolvedTicket = ticketService.resolveTicket(id);
+
+        return resolvedTicket
                 .map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }

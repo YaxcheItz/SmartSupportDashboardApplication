@@ -6,6 +6,8 @@ import com.yaxcherg.smartsupportdashboard.model.Ticket;
 import com.yaxcherg.smartsupportdashboard.repository.TicketRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -60,17 +62,31 @@ public class TicketService {
     }
 
     // Ahora devolvemos una lista de ResponseDTOs
-    public List<TicketResponseDTO> getAllTickets() {
-        return ticketRepository.findAll()
-                .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    // Nuevo método con paginación
+    public Page<TicketResponseDTO> getAllTickets(Pageable pageable) {
+
+        // findAll(pageable) devuelve un Page<Ticket>, y usamos .map() para convertir cada Ticket a DTO
+        return ticketRepository.findAll(pageable)
+                .map(this::mapToResponse);
     }
 
     // Ahora devolvemos un Optional de ResponseDTO
     public Optional<TicketResponseDTO> getTicketById(Long id) {
         return ticketRepository.findById(id)
                 .map(this::mapToResponse);
+    }
+
+    // Nuevo método para marcar un ticket como resuelto
+    public Optional<TicketResponseDTO> resolveTicket(Long id) {
+
+        return ticketRepository.findById(id).map(ticket -> {
+
+            ticket.setStatus("CERRADO");
+
+            Ticket updatedTicket = ticketRepository.save(ticket);
+
+            return mapToResponse(updatedTicket);
+        });
     }
 
     // Método auxiliar (Mapeo manual de Entidad a DTO)
@@ -88,5 +104,5 @@ public class TicketService {
         dto.setStatus(ticket.getStatus());
         return dto;
     }
-    
+
 }
