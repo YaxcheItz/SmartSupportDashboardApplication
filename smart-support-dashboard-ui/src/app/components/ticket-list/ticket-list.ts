@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TicketService } from '../../services/ticket';
 import { Ticket } from '../../models/ticket.model';
+import { ToastService } from '../../services/toast'; // <-- IMPORTANTE IMPORTARLO
 
 @Component({
   selector: 'app-ticket-list',
@@ -11,27 +12,19 @@ import { Ticket } from '../../models/ticket.model';
 })
 export class TicketList implements OnInit {
 
-  // La lista original con TODOS los tickets de la base de datos
   tickets = signal<Ticket[]>([]);
-
-  // Guardamos cuál es el filtro actual. Por defecto es 'Todos'
   activeFilter = signal<string>('Todos');
 
-  // LA MAGIA: Una lista computada que se filtra automáticamente
-  // si 'tickets' o 'activeFilter' cambian.
   filteredTickets = computed(() => {
     const currentFilter = this.activeFilter();
     const allTickets = this.tickets();
 
-    if (currentFilter === 'Todos') {
-      return allTickets;
-    }
-
-    // Si no es 'Todos', filtramos donde la prioridad de la IA coincida con el botón
+    if (currentFilter === 'Todos') return allTickets;
     return allTickets.filter(ticket => ticket.aiPriority === currentFilter);
   });
 
   private ticketService = inject(TicketService);
+  private toastService = inject(ToastService); // <-- INYECTARLO AQUÍ
 
   ngOnInit(): void {
     this.loadTickets();
@@ -40,16 +33,34 @@ export class TicketList implements OnInit {
   loadTickets(): void {
     this.ticketService.getAllTickets().subscribe({
       next: (data) => {
-        this.tickets.set(data);
+        // CORRECCIÓN: Spring mete la lista dentro de "content" por la paginación
+        this.tickets.set(data.content || []);
       },
-      error: (error) => {
-        console.error('Error al cargar tickets:', error);
-      }
+      error: (error) => console.error('Error al cargar tickets:', error)
     });
   }
 
-  // Función para cambiar el filtro cuando el usuario haga clic en un botón
   setFilter(priority: string) {
     this.activeFilter.set(priority);
+  }
+
+  // NUEVO: Método que se ejecuta al presionar el botón
+  resolveTicket(id: number | undefined) {
+    if (!id) return;
+
+    this.ticketService.resolveTicket(id).subscribe({
+      next: (resolvedTicket) => {
+        // Actualizamos la lista local (Signal) sin recargar toda la página
+        this.tickets.update(currentTickets =>
+          currentTickets.map(t => t.id === id ? resolvedTicket : t)
+        );
+
+        this.toastService.showSuccess('¡Ticket resuelto con éxito!');
+      },
+      error: (error) => {
+        this.toastService.showError('Error al cerrar el ticket');
+        console.error(error);
+      }
+    });
   }
 }
