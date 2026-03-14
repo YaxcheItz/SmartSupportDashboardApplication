@@ -33,5 +33,6 @@ public class Ticket {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     // Estado del ticket: ABIERTO, EN_PROGRESO, CERRADO
+    @Column(nullable = false)
     private String status = "ABIERTO";
 }

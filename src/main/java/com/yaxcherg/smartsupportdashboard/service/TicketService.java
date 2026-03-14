@@ -1,5 +1,7 @@
 package com.yaxcherg.smartsupportdashboard.service;
 
+import com.yaxcherg.smartsupportdashboard.dto.TicketRequestDTO;
+import com.yaxcherg.smartsupportdashboard.dto.TicketResponseDTO;
 import com.yaxcherg.smartsupportdashboard.model.Ticket;
 import com.yaxcherg.smartsupportdashboard.repository.TicketRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,29 +9,36 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class TicketService {
 
     private final TicketRepository ticketRepository;
-    private final GeminiAiService geminiAiService; // ¡Añadimos a nuestro experto en IA!
+    private final GeminiAiService geminiAiService;
 
     @Autowired
     public TicketService(TicketRepository ticketRepository, GeminiAiService geminiAiService) {
         this.ticketRepository = ticketRepository;
-        this.geminiAiService = geminiAiService; // Lo inyectamos aquí
+        this.geminiAiService = geminiAiService;
     }
 
-    public Ticket createTicket(Ticket ticket) {
-        // 1. La IA nos devuelve ahora un texto en formato JSON
+    // Ahora recibimos un RequestDTO y devolvemos un ResponseDTO
+    public TicketResponseDTO createTicket(TicketRequestDTO request) {
+
+        // 1. Convertimos el Request DTO a nuestra Entidad Ticket (BD)
+        Ticket ticket = new Ticket();
+        ticket.setTitle(request.getTitle());
+        ticket.setDescription(request.getDescription());
+        ticket.setCustomerEmail(request.getCustomerEmail());
+
+        // 2. La IA analiza la descripción
         String aiResponseJson = geminiAiService.analyzeTicket(ticket.getDescription());
 
         try {
-            // 2. Usamos Jackson (que ya viene con Spring) para convertir ese texto en un objeto que podamos leer
             tools.jackson.databind.ObjectMapper mapper = new tools.jackson.databind.ObjectMapper();
             tools.jackson.databind.JsonNode aiData = mapper.readTree(aiResponseJson);
 
-            // 3. Asignamos los 4 valores leídos de la IA a nuestro Ticket
             ticket.setAiCategory(aiData.path("category").asText("No detectada"));
             ticket.setAiPriority(aiData.path("priority").asText("Media"));
             ticket.setAiTone(aiData.path("tone").asText("Neutral"));
@@ -43,15 +52,41 @@ public class TicketService {
             ticket.setAiSummary("Error IA");
         }
 
-        // 4. Guardamos en la base de datos
-        return ticketRepository.save(ticket);
+        // 3. Guardamos en la BD
+        Ticket savedTicket = ticketRepository.save(ticket);
+
+        // 4. Convertimos la Entidad guardada a un Response DTO para devolverlo
+        return mapToResponse(savedTicket);
     }
 
-    public List<Ticket> getAllTickets() {
-        return ticketRepository.findAll();
+    // Ahora devolvemos una lista de ResponseDTOs
+    public List<TicketResponseDTO> getAllTickets() {
+        return ticketRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
-    public Optional<Ticket> getTicketById(Long id) {
-        return ticketRepository.findById(id);
+    // Ahora devolvemos un Optional de ResponseDTO
+    public Optional<TicketResponseDTO> getTicketById(Long id) {
+        return ticketRepository.findById(id)
+                .map(this::mapToResponse);
     }
+
+    // Método auxiliar (Mapeo manual de Entidad a DTO)
+    private TicketResponseDTO mapToResponse(Ticket ticket) {
+        TicketResponseDTO dto = new TicketResponseDTO();
+        dto.setId(ticket.getId());
+        dto.setTitle(ticket.getTitle());
+        dto.setDescription(ticket.getDescription());
+        dto.setCustomerEmail(ticket.getCustomerEmail());
+        dto.setAiCategory(ticket.getAiCategory());
+        dto.setAiPriority(ticket.getAiPriority());
+        dto.setAiTone(ticket.getAiTone());
+        dto.setAiSummary(ticket.getAiSummary());
+        dto.setCreatedAt(ticket.getCreatedAt());
+        dto.setStatus(ticket.getStatus());
+        return dto;
+    }
+    
 }
