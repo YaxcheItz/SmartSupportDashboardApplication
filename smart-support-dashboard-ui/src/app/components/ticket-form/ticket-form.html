@@ -1,67 +1,77 @@
-<div class="form-container">
-  <h2>📝 Crear Nuevo Ticket</h2>
-  <p class="subtitle">Describe tu problema y nuestra Inteligencia Artificial lo priorizará automáticamente para ti.</p>
-
-  <!-- Enlazamos el HTML con el grupo 'ticketForm' de nuestro .ts -->
-  <!-- (ngSubmit) dispara la función onSubmit() cuando le damos a enviar -->
-  <form [formGroup]="ticketForm" (ngSubmit)="onSubmit()" class="ticket-form">
-    
-    <!-- CAMPO: CORREO ELECTRÓNICO -->
-    <div class="form-group">
-      <label for="customerEmail">Tu Correo Electrónico</label>
-      <input 
-        id="customerEmail" 
-        type="email" 
-        formControlName="customerEmail" 
-        placeholder="ejemplo@correo.com"
-        [ngClass]="{'is-invalid': ticketForm.get('customerEmail')?.invalid && ticketForm.get('customerEmail')?.touched}"
-      >
-      <!-- Mensaje de error si el usuario escribió algo mal -->
-      <div class="error-msg" *ngIf="ticketForm.get('customerEmail')?.invalid && ticketForm.get('customerEmail')?.touched">
-        Por favor ingresa un correo válido.
-      </div>
+<div class="form-wrapper">
+  <div class="form-container">
+    <div class="form-header">
+      <div class="header-icon">✨</div>
+      <h2>Crear Nuevo Ticket</h2>
+      <p class="subtitle">Describe tu problema y nuestra Inteligencia Artificial lo priorizará y asignará automáticamente.</p>
     </div>
 
-    <!-- CAMPO: TÍTULO -->
-    <div class="form-group">
-      <label for="title">Asunto / Título</label>
-      <input 
-        id="title" 
-        type="text" 
-        formControlName="title" 
-        placeholder="Ej: No me enciende la pantalla"
-        [ngClass]="{'is-invalid': ticketForm.get('title')?.invalid && ticketForm.get('title')?.touched}"
-      >
-      <div class="error-msg" *ngIf="ticketForm.get('title')?.invalid && ticketForm.get('title')?.touched">
-        El título es obligatorio y debe tener al menos 5 caracteres.
-      </div>
-    </div>
-
-    <!-- CAMPO: DESCRIPCIÓN -->
-    <div class="form-group">
-      <label for="description">Descripción Detallada</label>
-      <textarea 
-        id="description" 
-        rows="5" 
-        formControlName="description" 
-        placeholder="Explica tu problema con el mayor detalle posible para que la IA pueda clasificarlo bien..."
-        [ngClass]="{'is-invalid': ticketForm.get('description')?.invalid && ticketForm.get('description')?.touched}"
-      ></textarea>
-      <div class="error-msg" *ngIf="ticketForm.get('description')?.invalid && ticketForm.get('description')?.touched">
-        La descripción debe tener al menos 15 caracteres.
-      </div>
-    </div>
-
-    <!-- BOTÓN DE ENVIAR -->
-    <!-- [disabled] bloquea el botón si el formulario tiene errores o si la IA está pensando -->
-    <button type="submit" class="submit-btn" [disabled]="ticketForm.invalid || isSubmitting">
-      <span *ngIf="!isSubmitting">Enviar Ticket Seguro</span>
+    <!-- Enlazamos el HTML con el grupo 'ticketForm' de nuestro .ts -->
+    <form [formGroup]="ticketForm" (ngSubmit)="onSubmit()" class="ticket-form">
       
-      <!-- Si isSubmitting es TRUE, el botón cambia su texto -->
-      <span *ngIf="isSubmitting" class="loading-state">
-        <span class="spinner"></span> 
-        Procesando con IA...
-      </span>
-    </button>
-  </form>
+      <!-- CAMPO: CORREO ELECTRÓNICO -->
+      <div class="form-group">
+        <label for="customerEmail">Tu Correo Electrónico</label>
+        <div class="input-wrapper">
+          <span class="input-icon">✉️</span>
+          <input 
+            id="customerEmail" 
+            type="email" 
+            formControlName="customerEmail" 
+            placeholder="ejemplo@correo.com"
+            [ngClass]="{'is-invalid': ticketForm.get('customerEmail')?.invalid && ticketForm.get('customerEmail')?.touched}"
+          >
+        </div>
+        <div class="error-msg" *ngIf="ticketForm.get('customerEmail')?.invalid && ticketForm.get('customerEmail')?.touched">
+          Por favor ingresa un correo válido.
+        </div>
+      </div>
+
+      <!-- CAMPO: TÍTULO -->
+      <div class="form-group">
+        <label for="title">Asunto / Título</label>
+        <div class="input-wrapper">
+          <span class="input-icon">📝</span>
+          <input 
+            id="title" 
+            type="text" 
+            formControlName="title" 
+            placeholder="Ej: No me enciende la pantalla"
+            [ngClass]="{'is-invalid': ticketForm.get('title')?.invalid && ticketForm.get('title')?.touched}"
+          >
+        </div>
+        <div class="error-msg" *ngIf="ticketForm.get('title')?.invalid && ticketForm.get('title')?.touched">
+          El título es obligatorio y debe tener al menos 5 caracteres.
+        </div>
+      </div>
+
+      <!-- CAMPO: DESCRIPCIÓN -->
+      <div class="form-group">
+        <label for="description">Descripción Detallada</label>
+        <textarea 
+          id="description" 
+          rows="5" 
+          formControlName="description" 
+          placeholder="Explica tu problema con el mayor detalle posible para que la IA pueda clasificarlo bien..."
+          [ngClass]="{'is-invalid': ticketForm.get('description')?.invalid && ticketForm.get('description')?.touched}"
+        ></textarea>
+        <div class="error-msg" *ngIf="ticketForm.get('description')?.invalid && ticketForm.get('description')?.touched">
+          La descripción debe tener al menos 15 caracteres.
+        </div>
+      </div>
+
+      <!-- BOTÓN DE ENVIAR -->
+      <button type="submit" class="submit-btn" [disabled]="ticketForm.invalid || isSubmitting">
+        <span *ngIf="!isSubmitting" class="btn-content">
+          <span>Enviar Ticket Seguro</span>
+          <span class="btn-icon">→</span>
+        </span>
+        
+        <span *ngIf="isSubmitting" class="loading-state">
+          <span class="spinner"></span> 
+          Analizando con IA...
+        </span>
+      </button>
+    </form>
+  </div>
 </div>
