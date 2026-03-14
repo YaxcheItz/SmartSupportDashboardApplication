@@ -47,6 +47,23 @@
 
       <div class="card-footer">
         <small>De: {{ ticket.customerEmail }}</small>
+
+        <!-- NUEVO BOTÓN: Solo se muestra si no está CERRADO -->
+        <button
+          *ngIf="ticket.status !== 'CERRADO'"
+          style="
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+          "
+          (click)="resolveTicket(ticket.id)"
+        >
+          ✔ Marcar Resuelto
+        </button>
       </div>
     </div>
   </div>
