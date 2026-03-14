@@ -8,14 +8,14 @@ import { Ticket } from '../../models/ticket.model';
   standalone: true,
   imports: [BaseChartDirective],
   template: `
-    <div class="stats-container" style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; text-align: center;">
-      <h3 style="margin-top: 0; color: #333;">Distribución por Prioridad IA</h3>
+    <div class="stats-container" style="background: var(--card-bg); padding: 1.5rem; border-radius: var(--radius-lg); border: 1px solid var(--border-color); text-align: center; height: 100%; display: flex; flex-direction: column;">
+      <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: var(--text-color); font-size: 1.125rem;">Distribución por Prioridad IA</h3>
 
       <!-- Si no hay tickets, mostramos un mensaje, si hay, mostramos la gráfica -->
       @if (tickets().length === 0) {
-        <p>No hay datos suficientes para la gráfica.</p>
+        <p style="color: var(--text-muted); margin: auto;">No hay datos para la gráfica.</p>
       } @else {
-        <div style="display: block; margin: 0 auto; height: 250px; width: 250px;">
+        <div style="display: block; margin: auto; height: 180px; width: 100%; max-width: 250px;">
           <canvas baseChart
             [data]="doughnutChartData()"
             [options]="doughnutChartOptions"
