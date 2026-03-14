@@ -48,25 +48,48 @@
         <span class="tag tone">👤 Tono: {{ ticket.aiTone }}</span>
       </div>
 
-      <div class="card-footer">
-        <small>De: {{ ticket.customerEmail }}</small>
+      <!-- Justo arriba o al lado del botón de "Marcar Resuelto" -->
+      <div
+        class="card-footer"
+        style="display: flex; justify-content: space-between; align-items: center"
+      >
+        <small> De: {{ ticket.customerEmail }} </small>
 
-        <!-- NUEVO BOTÓN: Solo se muestra si no está CERRADO -->
-        <button
-          *ngIf="ticket.status !== 'CERRADO'"
-          style="
-            background-color: #10b981;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-          "
-          (click)="resolveTicket(ticket.id)"
-        >
-          ✔ Marcar Resuelto
-        </button>
+        <div style="display: flex; gap: 10px">
+          <!-- BOTÓN PARA VER DETALLE -->
+          <a
+            [routerLink]="['/ticket', ticket.id]"
+            style="
+              text-decoration: none;
+              background-color: #3b82f6;
+              color: white;
+              padding: 5px 10px;
+              border-radius: 5px;
+              font-weight: bold;
+              font-size: 0.9em;
+            "
+          >
+            Ver Detalles
+          </a>
+
+          <!-- BOTÓN RESUELTO -->
+          <button
+            *ngIf="ticket.status !== 'CERRADO'"
+            style="
+              background-color: #10b981;
+              color: white;
+              border: none;
+              padding: 5px 10px;
+              border-radius: 5px;
+              cursor: pointer;
+              font-weight: bold;
+              font-size: 0.9em;
+            "
+            (click)="resolveTicket(ticket.id)"
+          >
+            ✔ Resuelto
+          </button>
+        </div>
       </div>
     </div>
   </div>
