@@ -4,9 +4,10 @@ import { TicketService } from '../../services/ticket';
 import { Ticket } from '../../models/ticket.model';
 import { ToastService } from '../../services/toast'; // <-- IMPORTANTE IMPORTARLO
 import { DashboardStatsComponent } from '../dashboard-stats/dashboard-stats';
+import { RouterModule } from '@angular/router';
 @Component({
   selector: 'app-ticket-list',
-  imports: [CommonModule, DashboardStatsComponent],
+  imports: [CommonModule, DashboardStatsComponent, RouterModule],
   templateUrl: './ticket-list.html',
   styleUrl: './ticket-list.css',
 })

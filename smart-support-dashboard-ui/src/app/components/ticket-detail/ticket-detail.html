@@ -1,0 +1,133 @@
+<div
+  class="detail-container"
+  style="
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  "
+>
+  <button
+    (click)="goBack()"
+    style="
+      background: transparent;
+      border: 1px solid #ccc;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    "
+  >
+    ← Volver al Dashboard
+  </button>
+
+  @if (loading()) {
+    <p>Cargando información del ticket...</p>
+  } @else if (ticket()) {
+    <div
+      class="header-info"
+      style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+      "
+    >
+      <h1 style="margin: 0; color: #2c3e50">
+        {{ ticket()?.title }}
+      </h1>
+
+      <span
+        [style.background-color]="ticket()?.status === 'CERRADO' ? '#e2e8f0' : '#dbeafe'"
+        [style.color]="ticket()?.status === 'CERRADO' ? '#64748b' : '#1e40af'"
+        style="padding: 5px 10px; border-radius: 20px; font-weight: bold;"
+      >
+        {{ ticket()?.status }}
+      </span>
+    </div>
+
+    <div class="meta-info" style="display: flex; gap: 15px; margin-bottom: 20px">
+      <span
+        style="
+          background: #fee2e2;
+          color: #b91c1c;
+          padding: 4px 10px;
+          border-radius: 5px;
+          font-size: 0.9em;
+        "
+      >
+        Prioridad: {{ ticket()?.aiPriority }}
+      </span>
+
+      <span
+        style="
+          background: #fef9c3;
+          color: #b45309;
+          padding: 4px 10px;
+          border-radius: 5px;
+          font-size: 0.9em;
+        "
+      >
+        Categoría: {{ ticket()?.aiCategory }}
+      </span>
+
+      <span
+        style="
+          background: #f3f4f6;
+          color: #374151;
+          padding: 4px 10px;
+          border-radius: 5px;
+          font-size: 0.9em;
+        "
+      >
+        Tono: {{ ticket()?.aiTone }}
+      </span>
+    </div>
+
+    <div class="section" style="margin-bottom: 25px">
+      <h3 style="color: #475569; border-left: 4px solid #3b82f6; padding-left: 10px">
+        Descripción Original del Cliente
+      </h3>
+
+      <div
+        style="
+          background: #f8fafc;
+          padding: 15px;
+          border-radius: 8px;
+          font-size: 1.1em;
+          line-height: 1.6;
+        "
+      >
+        {{ ticket()?.description }}
+      </div>
+
+      <small style="color: #64748b; display: block; margin-top: 5px">
+        Reportado por: {{ ticket()?.customerEmail }}
+      </small>
+    </div>
+
+    <div class="section">
+      <h3 style="color: #475569; border-left: 4px solid #8b5cf6; padding-left: 10px">
+        Análisis de la IA
+      </h3>
+
+      <div
+        style="
+          background: #f5f3ff;
+          padding: 15px;
+          border-radius: 8px;
+          font-style: italic;
+          color: #4c1d95;
+        "
+      >
+        "{{ ticket()?.aiSummary }}"
+      </div>
+    </div>
+  } @else {
+    <p>No se pudo cargar el ticket. Tal vez no exista.</p>
+  }
+</div>
