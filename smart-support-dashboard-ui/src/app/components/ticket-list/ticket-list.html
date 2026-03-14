@@ -2,6 +2,9 @@
   <div class="dashboard-header">
     <h2>Tickets Recientes</h2>
 
+    <!-- NUESTRA NUEVA GRÁFICA -->
+    <app-dashboard-stats [tickets]="tickets()"></app-dashboard-stats>
+
     <!-- BARRA DE FILTROS -->
     <div class="filter-bar">
       <button (click)="setFilter('Todos')" [class.active]="activeFilter() === 'Todos'">
