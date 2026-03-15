@@ -64,4 +64,11 @@ public class TicketController {
                 .map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
+
+    // NUEVO: Endpoint para eliminar un ticket
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTicket(@PathVariable Long id) {
+        ticketService.deleteTicket(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }

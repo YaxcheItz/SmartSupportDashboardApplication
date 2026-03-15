@@ -1,87 +1,90 @@
-<div class="dashboard-container">
-  <div class="dashboard-header">
-    <div class="header-title">
-      <h2>Tickets Recientes</h2>
-      <p class="subtitle">Gestiona y prioriza las solicitudes de soporte.</p>
+<div class="dashboard-layout">
+  
+  <!-- BARRA LATERAL IZQUIERDA (Filtros y Métricas) -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="search-box">
+        <span class="icon">🔍</span>
+        <input type="text" placeholder="Búsqueda rápida..." [(ngModel)]="searchQuery" (input)="searchQuery.set($any($event.target).value)">
+      </div>
     </div>
 
-    <!-- NUESTRA NUEVA GRÁFICA -->
-    <div class="chart-wrapper">
+    <nav class="nav-filters">
+      <small class="nav-label">Prioridades</small>
+      <button (click)="setFilter('Todos')" [class.active]="activeFilter() === 'Todos'">
+        <span>📂 Todos</span> <span class="badge">{{ counts().Todos }}</span>
+      </button>
+      <button (click)="setFilter('Urgente')" [class.active]="activeFilter() === 'Urgente'">
+        <span>🔴 Urgente</span> <span class="badge">{{ counts().Urgente }}</span>
+      </button>
+      <button (click)="setFilter('Alta')" [class.active]="activeFilter() === 'Alta'">
+        <span>🟠 Alta</span> <span class="badge">{{ counts().Alta }}</span>
+      </button>
+      <button (click)="setFilter('Media')" [class.active]="activeFilter() === 'Media'">
+        <span>🟡 Media</span> <span class="badge">{{ counts().Media }}</span>
+      </button>
+      <button (click)="setFilter('Baja')" [class.active]="activeFilter() === 'Baja'">
+        <span>🟢 Baja</span> <span class="badge">{{ counts().Baja }}</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-stats">
       <app-dashboard-stats [tickets]="tickets()"></app-dashboard-stats>
     </div>
-  </div>
+  </aside>
 
-  <!-- BARRA DE FILTROS -->
-  <div class="filter-bar">
-    <button (click)="setFilter('Todos')" [class.active]="activeFilter() === 'Todos'">
-      Todos
-    </button>
-    <button (click)="setFilter('Urgente')" [class.active]="activeFilter() === 'Urgente'">
-      <span class="dot dot-urgente"></span> Urgente
-    </button>
-    <button (click)="setFilter('Alta')" [class.active]="activeFilter() === 'Alta'">
-      <span class="dot dot-alta"></span> Alta
-    </button>
-    <button (click)="setFilter('Media')" [class.active]="activeFilter() === 'Media'">
-      <span class="dot dot-media"></span> Media
-    </button>
-    <button (click)="setFilter('Baja')" [class.active]="activeFilter() === 'Baja'">
-      <span class="dot dot-baja"></span> Baja
-    </button>
-  </div>
-
-  <!-- Si no hay tickets en general o si el filtro actual dejó la lista vacía -->
-  <div *ngIf="filteredTickets().length === 0" class="empty-state">
-    <div class="empty-icon">☕</div>
-    <h3>¡Todo está tranquilo!</h3>
-    <p>No hay tickets disponibles para esta prioridad.</p>
-  </div>
-
-  <!-- GRID DE TICKETS -->
-  <div class="tickets-grid" *ngIf="filteredTickets().length > 0">
-    <div class="ticket-card" *ngFor="let ticket of filteredTickets()" [class.resolved]="ticket.status === 'CERRADO'">
-      <div class="card-header">
-        <h3>{{ ticket.title }}</h3>
-        <span class="status-badge" [ngClass]="ticket.status === 'CERRADO' ? 'status-closed' : 'status-open'">
-          {{ ticket.status }}
-        </span>
+  <!-- ÁREA PRINCIPAL (Tickets) -->
+  <main class="main-content">
+    <header class="main-header">
+      <h1>Vista de Tickets</h1>
+      <div class="header-actions">
+        <span class="text-muted">{{ filteredTickets().length }} encontrados</span>
       </div>
+    </header>
 
-      <p class="description">{{ ticket.description }}</p>
-
-      <div class="summary-box">
-        <div class="summary-title">🤖 Resumen IA:</div>
-        <p class="summary-text">"{{ ticket.aiSummary }}"</p>
+    @if (filteredTickets().length === 0) {
+      <div class="empty-state">
+        <span class="empty-icon">🏖️</span>
+        <h3>Bandeja despejada</h3>
+        <p>No hay tickets pendientes con estos filtros.</p>
       </div>
+    } @else {
+      <div class="tickets-grid">
+        <div class="ticket-card" *ngFor="let ticket of filteredTickets()" [class.resolved]="ticket.status === 'CERRADO'" [routerLink]="['/ticket', ticket.id]">
+          
+          <div class="card-meta">
+            <span class="prio-tag" [ngClass]="'prio-' + ticket.aiPriority.toLowerCase()">
+              {{ ticket.aiPriority }}
+            </span>
+            <button class="btn-delete" (click)="deleteTicket($event, ticket.id)" title="Borrar">🗑️</button>
+          </div>
 
-      <div class="ai-tags">
-        <span class="tag tag-category"><i class="icon">🏷️</i> {{ ticket.aiCategory }}</span>
-        <span class="tag tag-priority" [ngClass]="'priority-' + (ticket.aiPriority ? ticket.aiPriority.toLowerCase() : '')">
-          <i class="icon">⚡</i> {{ ticket.aiPriority }}
-        </span>
-        <span class="tag tag-tone"><i class="icon">🎭</i> {{ ticket.aiTone }}</span>
-      </div>
+          <div class="card-content">
+            <h3>{{ ticket.title }}</h3>
+            <p class="desc">{{ ticket.description }}</p>
+            
+            <div class="ia-insight">
+              <span class="robot-icon">🤖</span>
+              <p>{{ ticket.aiSummary }}</p>
+            </div>
+          </div>
 
-      <div class="card-footer">
-        <div class="customer-info">
-          <div class="avatar">{{ ticket.customerEmail.charAt(0).toUpperCase() }}</div>
-          <small>{{ ticket.customerEmail }}</small>
-        </div>
-
-        <div class="action-buttons">
-          <a [routerLink]="['/ticket', ticket.id]" class="btn btn-outline btn-sm">
-            Ver Detalles
-          </a>
-
-          <button
-            *ngIf="ticket.status !== 'CERRADO'"
-            class="btn btn-success btn-sm"
-            (click)="resolveTicket(ticket.id)"
-          >
-            ✔ Resuelto
-          </button>
+          <div class="card-footer">
+            <div class="user">
+              <span class="avatar">{{ ticket.customerEmail.charAt(0).toUpperCase() }}</span>
+              <span class="email">{{ ticket.customerEmail }}</span>
+            </div>
+            
+            <div class="actions">
+              @if (ticket.status !== 'CERRADO') {
+                <button class="btn-resolve" (click)="resolveTicket($event, ticket.id)">Cerrar</button>
+              } @else {
+                <span class="closed-label">Finalizado</span>
+              }
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
+    }
+  </main>
 </div>

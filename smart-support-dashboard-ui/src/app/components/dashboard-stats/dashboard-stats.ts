@@ -8,23 +8,45 @@ import { Ticket } from '../../models/ticket.model';
   standalone: true,
   imports: [BaseChartDirective],
   template: `
-    <div class="stats-container" style="background: var(--card-bg); padding: 1.5rem; border-radius: var(--radius-lg); border: 1px solid var(--border-color); text-align: center; height: 100%; display: flex; flex-direction: column;">
-      <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: var(--text-color); font-size: 1.125rem;">Distribución por Prioridad IA</h3>
-
-      <!-- Si no hay tickets, mostramos un mensaje, si hay, mostramos la gráfica -->
-      @if (tickets().length === 0) {
-        <p style="color: var(--text-muted); margin: auto;">No hay datos para la gráfica.</p>
-      } @else {
-        <div style="display: block; margin: auto; height: 180px; width: 100%; max-width: 250px;">
+    <div class="stats-panel">
+      <div class="stats-info">
+        <h3>Distribución de Prioridades</h3>
+        <p>Visualización en tiempo real de tickets activos.</p>
+      </div>
+      <div class="chart-container">
+        @if (tickets().length === 0) {
+          <p class="no-data">Sin datos</p>
+        } @else {
           <canvas baseChart
             [data]="doughnutChartData()"
             [options]="doughnutChartOptions"
             [type]="doughnutChartType">
           </canvas>
-        </div>
-      }
+        }
+      </div>
     </div>
-  `
+  `,
+  styles: [`
+    .stats-panel {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+      padding: 1.5rem 2.5rem;
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      height: 100%;
+    }
+    .stats-info h3 { margin: 0; font-size: 1.25rem; color: var(--text-color); }
+    .stats-info p { margin: 0.5rem 0 0; color: var(--text-muted); font-size: 0.9rem; }
+    .chart-container { position: relative; height: 200px; width: 200px; flex-shrink: 0; }
+    .no-data { margin: auto; color: var(--text-muted); font-style: italic; }
+    @media (max-width: 600px) {
+      .stats-panel { flex-direction: column; text-align: center; padding: 1.5rem; }
+    }
+  `]
 })
 export class DashboardStatsComponent {
 

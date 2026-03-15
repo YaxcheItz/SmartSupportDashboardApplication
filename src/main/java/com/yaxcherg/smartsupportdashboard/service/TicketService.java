@@ -89,6 +89,11 @@ public class TicketService {
         });
     }
 
+    // NUEVO: Método para eliminar un ticket
+    public void deleteTicket(Long id) {
+        ticketRepository.deleteById(id);
+    }
+
     // Método auxiliar (Mapeo manual de Entidad a DTO)
     private TicketResponseDTO mapToResponse(Ticket ticket) {
         TicketResponseDTO dto = new TicketResponseDTO();

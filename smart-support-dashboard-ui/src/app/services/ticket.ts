@@ -34,4 +34,9 @@ export class TicketService {
   getTicketById(id: number): Observable<Ticket> {
     return this.http.get<Ticket>(`${this.apiUrl}/${id}`);
   }
+
+  // NUEVO: Eliminar un ticket (DELETE)
+  deleteTicket(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
 }
