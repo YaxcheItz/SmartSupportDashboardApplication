@@ -68,8 +68,8 @@
         <div class="ticket-card" *ngFor="let ticket of filteredTickets()" [class.resolved]="ticket.status === 'CERRADO'" [routerLink]="['/ticket', ticket.id]">
           
           <div class="card-meta">
-            <span class="prio-tag" [ngClass]="'prio-' + ticket.aiPriority.toLowerCase()">
-              {{ ticket.aiPriority }}
+            <span class="prio-tag" [ngClass]="'prio-' + (ticket.aiPriority ? ticket.aiPriority.toLowerCase() : 'baja')">
+              {{ ticket.aiPriority || 'Pendiente' }}
             </span>
             <button class="btn-delete" (click)="deleteTicket($event, ticket.id)" title="Borrar">🗑️</button>
           </div>
