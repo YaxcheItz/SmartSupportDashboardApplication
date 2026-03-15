@@ -38,8 +38,8 @@ public class TicketService {
         String aiResponseJson = geminiAiService.analyzeTicket(ticket.getDescription());
 
         try {
-            tools.jackson.databind.ObjectMapper mapper = new tools.jackson.databind.ObjectMapper();
-            tools.jackson.databind.JsonNode aiData = mapper.readTree(aiResponseJson);
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.JsonNode aiData = mapper.readTree(aiResponseJson);
 
             ticket.setAiCategory(aiData.path("category").asText("No detectada"));
             ticket.setAiPriority(aiData.path("priority").asText("Media"));
