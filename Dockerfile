@@ -10,8 +10,7 @@
     FROM eclipse-temurin:21-jre-jammy
     WORKDIR /app
     # Copiamos el archivo .jar generado en la etapa anterior
-    COPY --from=build /app/target/smart-support-dashboard-0.0.1-SNAPSHOT.jar
-      app.jar
+    COPY --from=build /app/target/smart-support-dashboard-0.0.1-SNAPSHOT.jar app.jar
 
     # Exponemos el puerto que usa Spring Boot
     EXPOSE 8080
