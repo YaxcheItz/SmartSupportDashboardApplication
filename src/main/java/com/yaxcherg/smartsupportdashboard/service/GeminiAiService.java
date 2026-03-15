@@ -1,7 +1,7 @@
 package com.yaxcherg.smartsupportdashboard.service;
 
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -9,19 +9,20 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Service
 public class GeminiAiService {
 
-    // Leemos las variables que pusiste en application.properties
     @Value("${gemini.api.key}")
     private String apiKey;
 
     @Value("${gemini.api.url}")
     private String apiUrl;
 
-    // RestTemplate es el "Postman" interno de Spring Boot
     private final RestTemplate restTemplate;
-    // ObjectMapper nos ayuda a leer el JSON que nos devuelva la IA
     private final ObjectMapper objectMapper;
 
     public GeminiAiService() {
@@ -29,42 +30,41 @@ public class GeminiAiService {
         this.objectMapper = new ObjectMapper();
     }
 
-    // Este es el método principal que usaremos
     public String analyzeTicket(String ticketDescription) {
         try {
+            // Verificación de seguridad en logs (solo los primeros 5 caracteres)
+            if (apiKey != null && apiKey.length() > 5) {
+                System.out.println("Usando API Key que empieza por: " + apiKey.substring(0, 5));
+            }
+
             String url = apiUrl + "?key=" + apiKey;
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            // EL NUEVO PROMPT: Le pedimos a la IA que actúe como una API y nos devuelva un JSON
             String prompt = "Eres un asistente experto en soporte técnico. Lee esta descripción de un problema de un cliente: '" + ticketDescription + "'.\n" +
-                    "Tu ÚNICO trabajo es responder con un objeto JSON válido, sin usar bloques de código Markdown (```json...), solo el texto JSON plano.\n" +
-                    "El JSON DEBE tener exactamente esta estructura y claves:\n" +
+                    "Tu ÚNICO trabajo es responder con un objeto JSON válido, sin usar bloques de código Markdown, solo el texto JSON plano.\n" +
+                    "Estructura:\n" +
                     "{\n" +
-                    "  \"category\": \"(elige entre: Facturación, Soporte Técnico, Ventas, Queja, Spam, Otro)\",\n" +
-                    "  \"priority\": \"(elige entre: Baja, Media, Alta, Urgente)\",\n" +
-                    "  \"tone\": \"(elige entre: Enojado, Frustrado, Preocupado, Neutral, Feliz)\",\n" +
-                    "  \"summary\": \"(escribe un resumen del problema en máximo 15 palabras)\"\n" +
-                    "}\n" +
-                    "Si el texto no tiene sentido (ej. 'asdasd'), pon la categoría 'Spam', prioridad 'Baja' y tono 'Neutral'.";
+                    "  \"category\": \"(Facturación, Soporte Técnico, Ventas, Queja, Spam, Otro)\",\n" +
+                    "  \"priority\": \"(Baja, Media, Alta, Urgente)\",\n" +
+                    "  \"tone\": \"(Enojado, Frustrado, Preocupado, Neutral, Feliz)\",\n" +
+                    "  \"summary\": \"(resumen en máximo 15 palabras)\"\n" +
+                    "}";
 
-            // Aseguramos que las comillas dobles del prompt se escapen correctamente para el JSON final
-            String escapedPrompt = prompt.replace("\"", "\\\"");
+            // CONSTRUCCIÓN SEGURA DEL JSON (Sin errores de comillas o enters)
+            Map<String, Object> requestBody = new HashMap<>();
+            Map<String, Object> content = new HashMap<>();
+            Map<String, String> part = new HashMap<>();
+            part.put("text", prompt);
+            content.put("parts", List.of(part));
+            requestBody.put("contents", List.of(content));
 
-            String requestBody = "{"
-                    + "\"contents\": [{"
-                    + "\"parts\":[{\"text\": \"" + escapedPrompt + "\"}]"
-                    + "}]"
-                    + "}";
-
-            HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
 
             String response = restTemplate.postForObject(url, requestEntity, String.class);
-
             JsonNode rootNode = objectMapper.readTree(response);
 
-            // La IA nos devuelve un texto que (por nuestras instrucciones) es un JSON
             return rootNode.path("candidates")
                     .get(0)
                     .path("content")
@@ -76,8 +76,7 @@ public class GeminiAiService {
 
         } catch (Exception e) {
             System.err.println("Error al contactar con la IA: " + e.getMessage());
-            // Si hay error, devolvemos un JSON por defecto para que no explote el programa
-            return "{\"category\":\"Error\",\"priority\":\"Baja\",\"tone\":\"Neutral\",\"summary\":\"Error al contactar IA\"}";
+            return "{\"category\":\"Error\",\"priority\":\"Baja\",\"tone\":\"Neutral\",\"summary\":\"Error de conexión con IA\"}";
         }
     }
 }
