@@ -15,8 +15,13 @@ import { FormsModule } from '@angular/forms';
 })
 export class TicketList implements OnInit {
   tickets = signal<Ticket[]>([]);
+  isLoading = signal<boolean>(true); // <-- NUEVO: Estado de carga
+  isWakingUp = signal<boolean>(false); // <-- NUEVO: Para el servidor dormido
   activeFilter = signal<string>('Todos');
   searchQuery = signal<string>('');
+
+  private ticketService = inject(TicketService);
+  private toastService = inject(ToastService);
 
   // Contador de tickets por prioridad (para los filtros)
   counts = computed(() => {
@@ -42,15 +47,29 @@ export class TicketList implements OnInit {
     });
   });
 
-  private ticketService = inject(TicketService);
-  private toastService = inject(ToastService);
+  ngOnInit(): void {
+    this.loadTickets();
+  }
 
-  ngOnInit(): void { this.loadTickets(); }
-
-  loadTickets() {
+  loadTickets(): void {
+    this.isLoading.set(true);
     this.ticketService.getAllTickets().subscribe({
-      next: (data) => this.tickets.set(data.content || []),
-      error: (err) => console.error('Error al cargar:', err)
+      next: (data) => {
+        this.tickets.set(data.content || []);
+        this.isLoading.set(false);
+        this.isWakingUp.set(false);
+      },
+      error: (error) => {
+        this.isLoading.set(false);
+        // Si el status es 0, es muy probable que el servidor esté despertando
+        if (error.status === 0) {
+          this.isWakingUp.set(true);
+          // Intentamos de nuevo automáticamente en 5 segundos
+          setTimeout(() => this.loadTickets(), 5000);
+        } else {
+          console.error('Error al cargar tickets:', error);
+        }
+      }
     });
   }
 
