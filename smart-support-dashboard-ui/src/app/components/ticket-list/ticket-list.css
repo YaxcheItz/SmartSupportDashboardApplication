@@ -269,6 +269,61 @@
 
 /* RESPONSIVE */
 @media (max-width: 900px) {
-  .dashboard-layout { grid-template-columns: 1fr; }
-  .sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border-color); }
+  .dashboard-layout { 
+    grid-template-columns: 1fr; 
+  }
+  .sidebar { 
+    position: static; 
+    height: auto; 
+    border-right: none; 
+    border-bottom: 1px solid var(--border-color); 
+    padding: 1.5rem;
+    gap: 1.5rem;
+  }
+  .nav-filters {
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    align-items: center;
+  }
+  .nav-label {
+    display: none;
+  }
+  .nav-filters button {
+    white-space: nowrap;
+  }
+  .main-content {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .main-content {
+    padding: 1rem;
+  }
+  .sidebar {
+    padding: 1rem;
+  }
+  .main-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .tickets-grid {
+    grid-template-columns: 1fr;
+  }
+  .ticket-card {
+    padding: 1.25rem;
+  }
+  .card-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
 }
