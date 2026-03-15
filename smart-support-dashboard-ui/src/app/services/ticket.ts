@@ -9,7 +9,7 @@ import { Ticket } from '../models/ticket.model'; // Importamos nuestro molde
 })
 export class TicketService {
   // La URL de tu servidor Java
-  private apiUrl = 'https://smart-support-dashboard.onrender.com';
+  private apiUrl = 'https://smart-support-dashboard.onrender.com/api/tickets';
 
   // Inyectamos el "Postman" de Angular
   private http = inject(HttpClient);
