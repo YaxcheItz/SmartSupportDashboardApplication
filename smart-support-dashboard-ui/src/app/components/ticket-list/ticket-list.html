@@ -42,7 +42,22 @@
       </div>
     </header>
 
-    @if (filteredTickets().length === 0) {
+    @if (isLoading() && !isWakingUp()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Cargando tickets...</p>
+      </div>
+    }
+
+    @if (isWakingUp()) {
+      <div class="waking-up-state">
+        <div class="loader-pulse"></div>
+        <h3>Despertando el servidor...</h3>
+        <p>El servidor gratuito de Render se duerme tras 15 min de inactividad. Esto tomará unos segundos más.</p>
+      </div>
+    }
+
+    @if (!isLoading() && !isWakingUp() && filteredTickets().length === 0) {
       <div class="empty-state">
         <span class="empty-icon">🏖️</span>
         <h3>Bandeja despejada</h3>
