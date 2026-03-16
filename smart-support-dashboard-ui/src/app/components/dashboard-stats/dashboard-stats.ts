@@ -10,12 +10,11 @@ import { Ticket } from '../../models/ticket.model';
   template: `
     <div class="stats-panel">
       <div class="stats-info">
-        <h3>Distribución de Prioridades</h3>
-        <p>Visualización en tiempo real de tickets activos.</p>
+        <h3>Métricas de Prioridad</h3>
       </div>
       <div class="chart-container">
         @if (tickets().length === 0) {
-          <p class="no-data">Sin datos</p>
+          <p class="no-data">Sin tickets activos</p>
         } @else {
           <canvas baseChart
             [data]="doughnutChartData()"
@@ -29,37 +28,47 @@ import { Ticket } from '../../models/ticket.model';
   styles: [`
     .stats-panel {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      gap: 2rem;
-      padding: 1.5rem 2.5rem;
-      background: var(--card-bg);
-      border-radius: var(--radius-lg);
+      gap: 1.5rem;
+      padding: 1.5rem 1rem;
+      background: var(--bg-color);
+      border-radius: var(--radius-md);
       border: 1px solid var(--border-color);
-      box-shadow: var(--shadow-sm);
-      height: 100%;
+      width: 100%;
+      box-sizing: border-box;
     }
-    .stats-info h3 { margin: 0; font-size: 1.25rem; color: var(--text-color); }
-    .stats-info p { margin: 0.5rem 0 0; color: var(--text-muted); font-size: 0.9rem; }
-    .chart-container { position: relative; height: 200px; width: 200px; flex-shrink: 0; }
-    .no-data { margin: auto; color: var(--text-muted); font-style: italic; }
-    @media (max-width: 600px) {
-      .stats-panel { flex-direction: column; text-align: center; padding: 1.5rem; }
+    .stats-info h3 { 
+      margin: 0; 
+      font-size: 0.8rem; 
+      text-transform: uppercase; 
+      letter-spacing: 0.05em; 
+      color: var(--text-muted); 
+      font-weight: 700; 
+      text-align: center;
+    }
+    .chart-container { 
+      position: relative; 
+      height: 160px; /* Tamaño perfecto para la barra lateral */
+      width: 100%; 
+      display: flex; 
+      justify-content: center; 
+    }
+    .no-data { 
+      margin: auto; 
+      color: var(--text-muted); 
+      font-style: italic; 
+      font-size: 0.85rem; 
     }
   `]
 })
 export class DashboardStatsComponent {
-
-  // RECIBIMOS los tickets desde el componente padre usando Input Signals
   tickets = input<Ticket[]>([]);
 
-  // Computa los datos para la gráfica automáticamente
   doughnutChartData = computed<ChartData<'doughnut'>>(() => {
     const allTickets = this.tickets();
-
     const count = { Urgente: 0, Alta: 0, Media: 0, Baja: 0 };
 
-    // Solo contamos tickets que NO estén cerrados
     allTickets
       .filter(t => t.status !== 'CERRADO')
       .forEach(t => {
@@ -75,7 +84,8 @@ export class DashboardStatsComponent {
         {
           data: [count.Urgente, count.Alta, count.Media, count.Baja],
           backgroundColor: ['#ef4444', '#f97316', '#eab308', '#3b82f6'],
-          hoverBackgroundColor: ['#dc2626', '#ea580c', '#ca8a04', '#2563eb']
+          hoverBackgroundColor: ['#dc2626', '#ea580c', '#ca8a04', '#2563eb'],
+          borderWidth: 0 /* Hace que la gráfica se vea más moderna */
         }
       ]
     };
@@ -85,7 +95,15 @@ export class DashboardStatsComponent {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'bottom' }
+      legend: { 
+        position: 'bottom',
+        labels: {
+          padding: 15,
+          usePointStyle: true,
+          pointStyle: 'circle',
+          font: { size: 11 }
+        }
+      }
     }
   };
 
