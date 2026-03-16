@@ -14,7 +14,9 @@ import { ToastService } from '../../services/toast';
 })
 export class LoginComponent {
   loginForm: FormGroup;
+  registerForm: FormGroup;
   isLoading = signal<boolean>(false);
+  isLoginMode = signal<boolean>(true);
 
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
@@ -23,32 +25,57 @@ export class LoginComponent {
 
   constructor() {
     this.loginForm = this.fb.group({
+      username: ['', [Validators.required]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+    });
+
+    this.registerForm = this.fb.group({
+      username: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
     });
   }
 
-  onSubmit() {
+  toggleMode() {
+    this.isLoginMode.set(!this.isLoginMode());
+    this.loginForm.reset();
+    this.registerForm.reset();
+  }
+
+  onLogin() {
     if (this.loginForm.valid) {
       this.isLoading.set(true);
-      const { email, password } = this.loginForm.value;
+      const { username, password } = this.loginForm.value;
 
-      this.authService.signIn(email, password).subscribe({
-        next: ({ data, error }) => {
+      this.authService.login(username, password).subscribe({
+        next: (res) => {
           this.isLoading.set(false);
-
-          if (error) {
-            this.toastService.showError('Credenciales incorrectas');
-            console.error(error);
-          } else {
-            this.toastService.showSuccess('¡Bienvenido Agente!');
-            // Si el login es exitoso, lo mandamos al dashboard
-            this.router.navigate(['/dashboard']);
-          }
+          this.toastService.showSuccess('¡Bienvenido Agente!');
+          this.router.navigate(['/dashboard']);
         },
         error: (err) => {
           this.isLoading.set(false);
-          this.toastService.showError('Error de red al conectar');
+          this.toastService.showError('Credenciales incorrectas o error de red');
+          console.error(err);
+        },
+      });
+    }
+  }
+
+  onRegister() {
+    if (this.registerForm.valid) {
+      this.isLoading.set(true);
+      const { username, email, password } = this.registerForm.value;
+
+      this.authService.register(username, email, password).subscribe({
+        next: () => {
+          this.isLoading.set(false);
+          this.toastService.showSuccess('Registro exitoso. Por favor inicia sesión.');
+          this.toggleMode(); // Cambia al modo login
+        },
+        error: (err) => {
+          this.isLoading.set(false);
+          this.toastService.showError('Error en el registro');
           console.error(err);
         },
       });

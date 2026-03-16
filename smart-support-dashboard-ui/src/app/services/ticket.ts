@@ -1,17 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Ticket } from '../models/ticket.model'; // Importamos nuestro molde
+import { Ticket } from '../models/ticket.model';
+import { environment } from '../../environments/environment';
 
-// en esto de abajo se le dice a angular que este servicio es inyectable es decir que se conectará a este servicio cuando se necesite en el puerto 8080
 @Injectable({
   providedIn: 'root',
 })
 export class TicketService {
-  // La URL de tu servidor Java en Render
-  private apiUrl = 'https://smart-support-dashboard.onrender.com/api/tickets';
+  private apiUrl = `${environment.apiUrl}/tickets`;
 
-  // Inyectamos el "Postman" de Angular
   private http = inject(HttpClient);
 
   // CORRECCIÓN: Ahora Spring devuelve un objeto con paginación, usamos 'any' (o una interfaz Page)

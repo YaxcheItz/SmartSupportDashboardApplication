@@ -1,53 +1,95 @@
-import { Injectable, signal } from '@angular/core';
-import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
-import { from, Observable } from 'rxjs';
+import { Injectable, signal, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
+
+export interface User {
+  id?: number;
+  username: string;
+  email: string;
+}
+
+export interface JwtResponse {
+  token: string;
+  type: string;
+  id: number;
+  username: string;
+  email: string;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  // ⚠️ REEMPLAZA ESTOS VALORES CON LOS DE TU PANEL DE SUPABASE (Settings -> API)
-  private supabaseUrl = 'https://iiuqvfoqpuelljtawnxh.supabase.co';
-  private supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpdXF2Zm9xcHVlbGxqdGF3bnhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MzI0NjMsImV4cCI6MjA4OTEwODQ2M30.Om9Jm1w5BVm_4L_wiK7-MdyMSQtW1mLa6PN0N_-CPIY';
+  private apiUrl = `${environment.apiUrl}/auth`;
+  private http = inject(HttpClient);
 
-  private supabase: SupabaseClient;
-
-  // Signal reactivo para saber en toda la app si el usuario está logueado
   currentUser = signal<User | null>(null);
 
   constructor() {
-    this.supabase = createClient(this.supabaseUrl, this.supabaseKey);
-
-    // Al iniciar el servicio, verificamos si ya hay una sesión guardada en el navegador
-    this.supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        this.currentUser.set(data.session.user);
-      }
-    });
-
-    // Escuchamos cambios (cuando hace login o logout)
-    this.supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        this.currentUser.set(session?.user || null);
-      } else if (event === 'SIGNED_OUT') {
-        this.currentUser.set(null);
-      }
-    });
+    this.loadUserFromStorage();
   }
 
-  // Método para iniciar sesión
-  signIn(email: string, password: string): Observable<any> {
-    const promise = this.supabase.auth.signInWithPassword({ email, password });
-    return from(promise); // Convertimos la Promesa a Observable para seguir el estilo de Angular
+  private loadUserFromStorage() {
+    const token = this.getToken();
+    const username = localStorage.getItem('username');
+    const email = localStorage.getItem('email');
+    const id = localStorage.getItem('id');
+
+    if (token && username && email) {
+      this.currentUser.set({ 
+        id: id ? Number(id) : undefined, 
+        username, 
+        email 
+      });
+    }
   }
 
-  // Método para cerrar sesión
-  async signOut() {
-    await this.supabase.auth.signOut();
+  login(username: string, password: string): Observable<JwtResponse> {
+    return this.http.post<JwtResponse>(`${this.apiUrl}/signin`, { username, password })
+      .pipe(
+        tap(response => {
+          this.saveAuthData(response);
+        })
+      );
   }
 
-  // Método auxiliar para saber si está logueado
+  register(username: string, email: string, password: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/signup`, { username, email, password });
+  }
+
+  logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    localStorage.removeItem('email');
+    localStorage.removeItem('id');
+    this.currentUser.set(null);
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem('token');
+  }
+
   isLoggedIn(): boolean {
-    return this.currentUser() !== null;
+    return !!this.getToken();
+  }
+
+  getCurrentUser() {
+    return this.currentUser();
+  }
+
+  private saveAuthData(response: JwtResponse) {
+    localStorage.setItem('token', response.token);
+    localStorage.setItem('username', response.username);
+    localStorage.setItem('email', response.email);
+    if (response.id) {
+        localStorage.setItem('id', response.id.toString());
+    }
+    
+    this.currentUser.set({
+      id: response.id,
+      username: response.username,
+      email: response.email
+    });
   }
 }

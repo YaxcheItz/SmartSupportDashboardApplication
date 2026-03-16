@@ -3,36 +3,77 @@
 
     <div class="form-header">
       <div class="header-icon">🔐</div>
-      <h2>Acceso Agentes</h2>
-      <p class="subtitle">Inicia sesión para gestionar los tickets de soporte.</p>
+      <h2>{{ isLoginMode() ? 'Acceso Agentes' : 'Registro de Agentes' }}</h2>
+      <p class="subtitle">{{ isLoginMode() ? 'Inicia sesión para gestionar los tickets de soporte.' : 'Crea una cuenta para unirte al sistema de soporte.' }}</p>
     </div>
 
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="ticket-form">
-
-      <div class="form-group">
-        <label for="email">Correo Electrónico</label>
-        <div class="input-wrapper">
-          <span class="input-icon">👤</span>
-          <input id="email" type="email" formControlName="email" placeholder="agente@empresa.com">
+    @if (isLoginMode()) {
+      <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="ticket-form">
+        <div class="form-group">
+          <label for="usernameLogin">Usuario</label>
+          <div class="input-wrapper">
+            <span class="input-icon">👤</span>
+            <input id="usernameLogin" type="text" formControlName="username" placeholder="Nombre de usuario">
+          </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label for="password">Contraseña</label>
-        <div class="input-wrapper">
-          <span class="input-icon">🔑</span>
-          <input id="password" type="password" formControlName="password" placeholder="••••••••">
+        <div class="form-group">
+          <label for="passwordLogin">Contraseña</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔑</span>
+            <input id="passwordLogin" type="password" formControlName="password" placeholder="••••••••">
+          </div>
         </div>
-      </div>
 
-      <button type="submit" class="submit-btn" [disabled]="loginForm.invalid || isLoading()">
-        @if (!isLoading()) {
-          <span class="btn-content">Ingresar al Sistema <span class="btn-icon">→</span></span>
-        } @else {
-          <span class="loading-state"><span class="spinner"></span> Validando...</span>
-        }
+        <button type="submit" class="submit-btn" [disabled]="loginForm.invalid || isLoading()">
+          @if (!isLoading()) {
+            <span class="btn-content">Ingresar al Sistema <span class="btn-icon">→</span></span>
+          } @else {
+            <span class="loading-state"><span class="spinner"></span> Validando...</span>
+          }
+        </button>
+      </form>
+    } @else {
+      <form [formGroup]="registerForm" (ngSubmit)="onRegister()" class="ticket-form">
+        <div class="form-group">
+          <label for="usernameReg">Usuario</label>
+          <div class="input-wrapper">
+            <span class="input-icon">👤</span>
+            <input id="usernameReg" type="text" formControlName="username" placeholder="Nombre de usuario">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="emailReg">Correo Electrónico</label>
+          <div class="input-wrapper">
+            <span class="input-icon">✉️</span>
+            <input id="emailReg" type="email" formControlName="email" placeholder="agente@empresa.com">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="passwordReg">Contraseña</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔑</span>
+            <input id="passwordReg" type="password" formControlName="password" placeholder="••••••••">
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn" [disabled]="registerForm.invalid || isLoading()">
+          @if (!isLoading()) {
+            <span class="btn-content">Registrarse <span class="btn-icon">→</span></span>
+          } @else {
+            <span class="loading-state"><span class="spinner"></span> Registrando...</span>
+          }
+        </button>
+      </form>
+    }
+
+    <div class="toggle-mode-container" style="text-align: center; margin-top: 15px;">
+      <button type="button" class="toggle-mode-btn" (click)="toggleMode()" style="background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.9em; text-decoration: underline;">
+        {{ isLoginMode() ? '¿No tienes cuenta? Regístrate aquí' : '¿Ya tienes cuenta? Inicia sesión' }}
       </button>
+    </div>
 
-    </form>
   </div>
 </div>
