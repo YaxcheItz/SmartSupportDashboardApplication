@@ -7,6 +7,7 @@ export interface User {
   id?: number;
   username: string;
   email: string;
+  role?: string;
 }
 
 export interface JwtResponse {
@@ -15,6 +16,7 @@ export interface JwtResponse {
   id: number;
   username: string;
   email: string;
+  role: string;
 }
 
 @Injectable({
@@ -35,12 +37,14 @@ export class AuthService {
     const username = localStorage.getItem('username');
     const email = localStorage.getItem('email');
     const id = localStorage.getItem('id');
+    const role = localStorage.getItem('role');
 
     if (token && username && email) {
       this.currentUser.set({ 
         id: id ? Number(id) : undefined, 
         username, 
-        email 
+        email,
+        role: role || undefined
       });
     }
   }
@@ -63,6 +67,7 @@ export class AuthService {
     localStorage.removeItem('username');
     localStorage.removeItem('email');
     localStorage.removeItem('id');
+    localStorage.removeItem('role');
     this.currentUser.set(null);
   }
 
@@ -78,10 +83,15 @@ export class AuthService {
     return this.currentUser();
   }
 
+  isAdmin(): boolean {
+    return this.currentUser()?.role === 'ROLE_ADMIN';
+  }
+
   private saveAuthData(response: JwtResponse) {
     localStorage.setItem('token', response.token);
     localStorage.setItem('username', response.username);
     localStorage.setItem('email', response.email);
+    localStorage.setItem('role', response.role);
     if (response.id) {
         localStorage.setItem('id', response.id.toString());
     }
@@ -89,7 +99,8 @@ export class AuthService {
     this.currentUser.set({
       id: response.id,
       username: response.username,
-      email: response.email
+      email: response.email,
+      role: response.role
     });
   }
 }

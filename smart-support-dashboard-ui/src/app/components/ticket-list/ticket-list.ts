@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { TicketService } from '../../services/ticket';
 import { Ticket } from '../../models/ticket.model';
 import { ToastService } from '../../services/toast';
+import { AuthService } from '../../services/auth';
 import { DashboardStatsComponent } from '../dashboard-stats/dashboard-stats';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -29,8 +30,11 @@ export class TicketList implements OnInit, OnDestroy {
 
   private ticketService = inject(TicketService);
   private toastService = inject(ToastService);
+  private authService = inject(AuthService);
   private webSocketService = inject(WebSocketService);
   private wsSubscription?: Subscription;
+
+  isAdmin = computed(() => this.authService.isAdmin());
 
   // Contador de tickets por prioridad (para los filtros)
   counts = computed(() => {

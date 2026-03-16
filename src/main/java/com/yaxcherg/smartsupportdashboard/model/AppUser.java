@@ -36,6 +36,8 @@ public class AppUser {
     @Size(max = 120)
     private String password;
     
+    private String role = "ROLE_USER";
+
     public AppUser(String username, String email, String password) {
         this.username = username;
         this.email = email;

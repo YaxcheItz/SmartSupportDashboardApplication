@@ -18,6 +18,9 @@ import com.yaxcherg.smartsupportdashboard.dto.MessageResponse;
 import com.yaxcherg.smartsupportdashboard.security.jwt.JwtUtils;
 import com.yaxcherg.smartsupportdashboard.security.services.UserDetailsImpl;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -44,10 +47,16 @@ public class AuthController {
 
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
+        String role = userDetails.getAuthorities().stream()
+                .findFirst()
+                .map(item -> item.getAuthority())
+                .orElse("ROLE_USER");
+
         return ResponseEntity.ok(new JwtResponse(jwt,
                 userDetails.getId(),
                 userDetails.getUsername(),
-                userDetails.getEmail()));
+                userDetails.getEmail(),
+                role));
     }
 
     @PostMapping("/signup")

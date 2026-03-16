@@ -74,7 +74,9 @@
             <span class="prio-tag" [ngClass]="ticket.aiCategory === 'Analizando...' ? 'prio-analizando' : 'prio-' + (ticket.aiPriority ? ticket.aiPriority.toLowerCase() : 'baja')">
               {{ ticket.aiCategory === 'Analizando...' ? '🤖 Analizando...' : (ticket.aiPriority || 'Pendiente') }}
             </span>
-            <button class="btn-delete" (click)="deleteTicket($event, ticket.id)" title="Borrar">🗑️</button>
+            @if (isAdmin()) {
+              <button class="btn-delete" (click)="deleteTicket($event, ticket.id)" title="Borrar">🗑️</button>
+            }
           </div>
 
           <div class="card-content">
