@@ -32,9 +32,12 @@
     "@stomp/stompjs": "^7.3.0",
     "@supabase/supabase-js": "^2.99.1",
     "chart.js": "^4.5.1",
+    "events": "^3.3.0",
+    "net": "^1.0.2",
     "ng2-charts": "^10.0.0",
     "rxjs": "~7.8.0",
     "sockjs-client": "^1.6.1",
+    "tls": "^0.0.1",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
