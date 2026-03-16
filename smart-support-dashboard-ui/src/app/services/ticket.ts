@@ -12,9 +12,8 @@ export class TicketService {
 
   private http = inject(HttpClient);
 
-  // CORRECCIÓN: Ahora Spring devuelve un objeto con paginación, usamos 'any' (o una interfaz Page)
-  getAllTickets(): Observable<any> {
-    return this.http.get<any>(this.apiUrl);
+  getAllTickets(page: number = 0, size: number = 10): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}?page=${page}&size=${size}`);
   }
 
   // NUEVO: Método para enviar un ticket (POST)

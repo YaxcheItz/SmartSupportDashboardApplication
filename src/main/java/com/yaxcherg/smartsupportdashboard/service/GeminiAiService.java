@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -28,6 +29,9 @@ public class GeminiAiService {
 
     @Autowired
     private TicketRepository ticketRepository;
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -83,7 +87,10 @@ public class GeminiAiService {
                 ticket.setAiPriority(aiJson.path("priority").asText("Baja"));
                 ticket.setAiTone(aiJson.path("tone").asText("Neutral"));
                 ticket.setAiSummary(aiJson.path("summary").asText("Sin resumen"));
-                ticketRepository.save(ticket);
+                Ticket savedTicket = ticketRepository.save(ticket);
+                
+                // NOTIFICAR AL FRONTEND VIA WEBSOCKETS
+                messagingTemplate.convertAndSend("/topic/tickets", savedTicket);
             });
 
         } catch (Exception e) {
@@ -91,7 +98,8 @@ public class GeminiAiService {
             ticketRepository.findById(ticketId).ifPresent(ticket -> {
                 ticket.setAiCategory("Error");
                 ticket.setAiSummary("Error de conexión con IA");
-                ticketRepository.save(ticket);
+                Ticket savedTicket = ticketRepository.save(ticket);
+                messagingTemplate.convertAndSend("/topic/tickets", savedTicket);
             });
         }
     }

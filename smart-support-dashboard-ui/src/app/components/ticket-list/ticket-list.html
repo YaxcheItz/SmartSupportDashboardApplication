@@ -103,6 +103,19 @@
           </div>
         </div>
       </div>
+      
+      <!-- Paginación -->
+      <div class="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+        <button class="btn btn-outline" (click)="prevPage()" [disabled]="currentPage() === 0">
+          ← Anterior
+        </button>
+        <span class="page-info" style="color: var(--text-muted); font-size: 0.9rem;">
+          Página {{ currentPage() + 1 }} de {{ totalPages() || 1 }}
+        </span>
+        <button class="btn btn-outline" (click)="nextPage()" [disabled]="currentPage() >= totalPages() - 1">
+          Siguiente →
+        </button>
+      </div>
     }
   </main>
 </div>
