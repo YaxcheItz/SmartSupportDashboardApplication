@@ -19,15 +19,19 @@ export class WebSocketService {
   private authService = inject(AuthService);
 
   constructor() {
+    // Determinar si estamos en un entorno seguro (HTTPS) basándonos en el navegador
+    const isSecure = window.location.protocol === 'https:';
+
     this.client = new Client({
-      // En desarrollo usamos SockJS, en producción usamos WebSockets nativos (wss://)
-      webSocketFactory: environment.production ? undefined : () => {
+      // Si estamos en HTTPS (Vercel), no usamos SockJS, usamos WebSockets puros
+      webSocketFactory: isSecure ? undefined : () => {
         const baseUrl = environment.apiUrl.replace('/api', ''); 
         return new SockJS(`${baseUrl}/ws-tickets`);
       },
-      brokerURL: environment.production
+      // Si estamos en HTTPS, construimos la URL wss:// basada en el API
+      brokerURL: isSecure
         ? environment.apiUrl.replace('https://', 'wss://').replace('/api', '/ws-tickets')
-        : undefined, // Si no es prod, se usa el webSocketFactory de arriba
+        : undefined,
       debug: (str) => {
         // Descomenta esto para ver los logs de WebSocket si falla algo
         // console.log(str);
