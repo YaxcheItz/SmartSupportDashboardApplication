@@ -21,7 +21,15 @@ export class WebSocketService {
   constructor() {
     this.client = new Client({
       // Usamos una función para conectarnos usando SockJS como fallback
-      webSocketFactory: () => new SockJS(`${environment.apiUrl.replace('/api', '')}/ws-tickets`),
+      // Aseguramos que use https/wss si la URL base es https
+      webSocketFactory: () => {
+        const baseUrl = environment.apiUrl.replace('/api', '');
+        // SockJS maneja internamente la conversión a wss:// si le damos https://
+        return new SockJS(`${baseUrl}/ws-tickets`);
+      },
+      brokerURL: environment.production 
+        ? environment.apiUrl.replace('https://', 'wss://').replace('/api', '/ws-tickets')
+        : environment.apiUrl.replace('http://', 'ws://').replace('/api', '/ws-tickets'),
       debug: (str) => {
         // Descomenta esto para ver los logs de WebSocket si falla algo
         // console.log(str);
