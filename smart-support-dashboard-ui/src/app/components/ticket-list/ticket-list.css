@@ -188,6 +188,36 @@
 .prio-alta { background: rgba(245, 158, 11, 0.1); color: var(--warning-color); }
 .prio-media { background: rgba(59, 130, 246, 0.1); color: var(--primary-color); }
 .prio-baja { background: rgba(16, 185, 129, 0.1); color: var(--success-color); }
+.prio-analizando { 
+  background: rgba(59, 130, 246, 0.1); 
+  color: var(--primary-color); 
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  animation: pulse-blue 2s infinite;
+}
+
+@keyframes pulse-blue {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+/* SKELETON EFFECT PARA IA ANALIZANDO */
+.ticket-card.is-analyzing .ia-insight {
+  background: linear-gradient(90deg, var(--bg-color) 25%, var(--border-color) 50%, var(--bg-color) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border: 1px solid var(--border-color);
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.ticket-card.is-analyzing .ia-insight p {
+  color: var(--text-muted);
+  font-weight: 500;
+}
 
 .btn-delete {
   background: transparent;

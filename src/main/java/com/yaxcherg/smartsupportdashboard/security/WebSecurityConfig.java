@@ -76,11 +76,16 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Permite tu entorno local y cualquier subdominio de Vercel en producción
-        configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:4200", "https://*.vercel.app", "https://smart-support-dashboard-ui.vercel.app"));
+        // Permite local y patrones de Vercel
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+            "http://localhost:4200", 
+            "https://*.vercel.app", 
+            "https://smart-support-dashboard-ui.vercel.app"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "x-auth-token"));
-        configuration.setExposedHeaders(List.of("x-auth-token"));
+        // Usamos "*" en headers para evitar problemas con cabeceras que Angular envía por defecto
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "x-auth-token"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

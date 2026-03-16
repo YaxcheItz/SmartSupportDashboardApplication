@@ -33,31 +33,20 @@ public class TicketService {
         ticket.setTitle(request.getTitle());
         ticket.setDescription(request.getDescription());
         ticket.setCustomerEmail(request.getCustomerEmail());
+        
+        // 2. Establecemos valores por defecto mientras la IA analiza
+        ticket.setAiCategory("Analizando...");
+        ticket.setAiPriority("Media");
+        ticket.setAiTone("Neutral");
+        ticket.setAiSummary("La IA está analizando este ticket...");
 
-        // 2. La IA analiza la descripción
-        String aiResponseJson = geminiAiService.analyzeTicket(ticket.getDescription());
-
-        try {
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            com.fasterxml.jackson.databind.JsonNode aiData = mapper.readTree(aiResponseJson);
-
-            ticket.setAiCategory(aiData.path("category").asText("No detectada"));
-            ticket.setAiPriority(aiData.path("priority").asText("Media"));
-            ticket.setAiTone(aiData.path("tone").asText("Neutral"));
-            ticket.setAiSummary(aiData.path("summary").asText("Sin resumen"));
-
-        } catch (Exception e) {
-            System.err.println("Error al leer el JSON de la IA: " + e.getMessage());
-            ticket.setAiCategory("Error IA");
-            ticket.setAiPriority("Error IA");
-            ticket.setAiTone("Error IA");
-            ticket.setAiSummary("Error IA");
-        }
-
-        // 3. Guardamos en la BD
+        // 3. Guardamos en la BD inmediatamente
         Ticket savedTicket = ticketRepository.save(ticket);
 
-        // 4. Convertimos la Entidad guardada a un Response DTO para devolverlo
+        // 4. Disparamos el análisis de IA de forma ASÍNCRONA (en segundo plano)
+        geminiAiService.analyzeAndSaveTicket(savedTicket.getId(), savedTicket.getDescription());
+
+        // 5. Convertimos la Entidad guardada a un Response DTO para devolverlo
         return mapToResponse(savedTicket);
     }
 

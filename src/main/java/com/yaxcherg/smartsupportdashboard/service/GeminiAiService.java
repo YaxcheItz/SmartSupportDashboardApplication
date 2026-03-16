@@ -2,10 +2,14 @@ package com.yaxcherg.smartsupportdashboard.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yaxcherg.smartsupportdashboard.model.Ticket;
+import com.yaxcherg.smartsupportdashboard.repository.TicketRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -22,6 +26,9 @@ public class GeminiAiService {
     @Value("${gemini.api.url}")
     private String apiUrl;
 
+    @Autowired
+    private TicketRepository ticketRepository;
+
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
@@ -30,13 +37,9 @@ public class GeminiAiService {
         this.objectMapper = new ObjectMapper();
     }
 
-    public String analyzeTicket(String ticketDescription) {
+    @Async
+    public void analyzeAndSaveTicket(Long ticketId, String ticketDescription) {
         try {
-            // Verificación de seguridad en logs (solo los primeros 5 caracteres)
-            if (apiKey != null && apiKey.length() > 5) {
-                System.out.println("Usando API Key que empieza por: " + apiKey.substring(0, 5));
-            }
-
             String url = apiUrl + "?key=" + apiKey;
 
             HttpHeaders headers = new HttpHeaders();
@@ -52,7 +55,6 @@ public class GeminiAiService {
                     "  \"summary\": \"(resumen en máximo 15 palabras)\"\n" +
                     "}";
 
-            // CONSTRUCCIÓN SEGURA DEL JSON (Sin errores de comillas o enters)
             Map<String, Object> requestBody = new HashMap<>();
             Map<String, Object> content = new HashMap<>();
             Map<String, String> part = new HashMap<>();
@@ -65,7 +67,7 @@ public class GeminiAiService {
             String response = restTemplate.postForObject(url, requestEntity, String.class);
             JsonNode rootNode = objectMapper.readTree(response);
 
-            return rootNode.path("candidates")
+            String aiResponseRaw = rootNode.path("candidates")
                     .get(0)
                     .path("content")
                     .path("parts")
@@ -74,9 +76,23 @@ public class GeminiAiService {
                     .asText()
                     .trim();
 
+            JsonNode aiJson = objectMapper.readTree(aiResponseRaw);
+            
+            ticketRepository.findById(ticketId).ifPresent(ticket -> {
+                ticket.setAiCategory(aiJson.path("category").asText("Otro"));
+                ticket.setAiPriority(aiJson.path("priority").asText("Baja"));
+                ticket.setAiTone(aiJson.path("tone").asText("Neutral"));
+                ticket.setAiSummary(aiJson.path("summary").asText("Sin resumen"));
+                ticketRepository.save(ticket);
+            });
+
         } catch (Exception e) {
             System.err.println("Error al contactar con la IA: " + e.getMessage());
-            return "{\"category\":\"Error\",\"priority\":\"Baja\",\"tone\":\"Neutral\",\"summary\":\"Error de conexión con IA\"}";
+            ticketRepository.findById(ticketId).ifPresent(ticket -> {
+                ticket.setAiCategory("Error");
+                ticket.setAiSummary("Error de conexión con IA");
+                ticketRepository.save(ticket);
+            });
         }
     }
 }
