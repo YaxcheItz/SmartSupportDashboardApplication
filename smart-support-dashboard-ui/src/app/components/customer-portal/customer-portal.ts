@@ -38,7 +38,8 @@ export class CustomerPortalComponent implements OnInit {
     });
   }
 
-  getStatusClass(status: string): string {
+  getStatusClass(status: string | undefined): string {
+    if (!status) return 'badge-default';
     switch (status) {
       case 'ABIERTO': return 'badge-open';
       case 'EN_PROGRESO': return 'badge-progress';

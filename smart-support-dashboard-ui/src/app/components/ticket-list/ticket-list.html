@@ -1,133 +1,135 @@
 <div class="dashboard-layout">
   
-  <!-- BARRA LATERAL IZQUIERDA (Filtros y Métricas) -->
+  <!-- BARRA LATERAL IZQUIERDA (Métricas Rápidas) -->
   <aside class="sidebar">
     <div class="sidebar-header">
-      <div class="search-box">
-        <span class="icon">🔍</span>
-        <input type="text" placeholder="Búsqueda rápida..." [(ngModel)]="searchQuery" (input)="searchQuery.set($any($event.target).value)">
-      </div>
+      <h2>Smart Support</h2>
     </div>
-
-    <nav class="nav-filters">
-      <small class="nav-label">Prioridades</small>
-      <button (click)="setFilter('Todos')" [class.active]="activeFilter() === 'Todos'">
-        <span>📂 Todos</span> <span class="badge">{{ counts().Todos }}</span>
-      </button>
-      <button (click)="setFilter('Urgente')" [class.active]="activeFilter() === 'Urgente'">
-        <span>🔴 Urgente</span> <span class="badge">{{ counts().Urgente }}</span>
-      </button>
-      <button (click)="setFilter('Alta')" [class.active]="activeFilter() === 'Alta'">
-        <span>🟠 Alta</span> <span class="badge">{{ counts().Alta }}</span>
-      </button>
-      <button (click)="setFilter('Media')" [class.active]="activeFilter() === 'Media'">
-        <span>🟡 Media</span> <span class="badge">{{ counts().Media }}</span>
-      </button>
-      <button (click)="setFilter('Baja')" [class.active]="activeFilter() === 'Baja'">
-        <span>🟢 Baja</span> <span class="badge">{{ counts().Baja }}</span>
-      </button>
-    </nav>
 
     <div class="sidebar-stats">
       <app-dashboard-stats [tickets]="tickets()"></app-dashboard-stats>
     </div>
   </aside>
 
-  <!-- ÁREA PRINCIPAL (Tickets) -->
+  <!-- ÁREA PRINCIPAL (Tickets y Filtros) -->
   <main class="main-content">
     <header class="main-header">
-      <h1>Vista de Tickets</h1>
-      <div class="header-actions">
-        <span class="text-muted">{{ filteredTickets().length }} encontrados</span>
+      <div class="header-info">
+        <h1>Vista de Tickets</h1>
+        <p class="text-muted">Gestiona y resuelve las solicitudes de tus clientes.</p>
       </div>
     </header>
 
-    @if (isLoading() && !isWakingUp()) {
-      <div class="loading-state">
-        <div class="spinner"></div>
-        <p>Cargando tickets...</p>
+    <!-- BARRA DE FILTROS AVANZADOS -->
+    <section class="filters-bar" *ngIf="isAdmin()">
+      <div class="filter-group search">
+        <label>Buscar por título</label>
+        <div class="input-with-icon">
+          <span class="icon">🔍</span>
+          <input type="text" placeholder="Ej: Error en pago..." 
+                 [(ngModel)]="filterValues.title" (input)="onFilterChange()">
+        </div>
       </div>
-    }
 
-    @if (isWakingUp()) {
-      <div class="waking-up-state">
-        <div class="loader-pulse"></div>
-        <h3>Despertando el servidor...</h3>
-        <p>El servidor gratuito de Render se duerme tras 15 min de inactividad. Esto tomará unos segundos más.</p>
+      <div class="filter-group">
+        <label>Estado</label>
+        <select [(ngModel)]="filterValues.status" (change)="onFilterChange()">
+          <option value="">Todos los estados</option>
+          <option value="ABIERTO">Abierto</option>
+          <option value="EN_PROGRESO">En Progreso</option>
+          <option value="RESUELTO">Resuelto</option>
+          <option value="CERRADO">Cerrado</option>
+        </select>
       </div>
-    }
 
-    @if (!isLoading() && !isWakingUp() && filteredTickets().length === 0) {
-      <div class="empty-state">
-        <span class="empty-icon">🏖️</span>
-        <h3>Bandeja despejada</h3>
-        <p>No hay tickets pendientes con estos filtros.</p>
+      <div class="filter-group">
+        <label>Prioridad IA</label>
+        <select [(ngModel)]="filterValues.priority" (change)="onFilterChange()">
+          <option value="">Todas las prioridades</option>
+          <option value="Urgente">🔴 Urgente</option>
+          <option value="Alta">🟠 Alta</option>
+          <option value="Media">🟡 Media</option>
+          <option value="Baja">🟢 Baja</option>
+        </select>
       </div>
-    } @else {
-      <div class="tickets-grid">
-        <div class="ticket-card" *ngFor="let ticket of filteredTickets()" 
-             [class.resolved]="ticket.status === 'CERRADO'" 
-             [class.is-analyzing]="ticket.aiCategory === 'Analizando...'"
-             [routerLink]="['/ticket', ticket.id]">
+
+      <div class="filter-group">
+        <label>Categoría IA</label>
+        <select [(ngModel)]="filterValues.category" (change)="onFilterChange()">
+          <option value="">Todas las categorías</option>
+          <option value="Soporte Técnico">🛠️ Técnico</option>
+          <option value="Facturación">💳 Facturación</option>
+          <option value="Ventas">📈 Ventas</option>
+          <option value="Queja">⚠️ Queja</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- ESTADOS DE CARGA -->
+    <div *ngIf="isLoading() && !isWakingUp()" class="loading-state">
+      <div class="spinner"></div>
+      <p>Buscando tickets...</p>
+    </div>
+
+    <div *ngIf="isWakingUp()" class="waking-up-state">
+      <div class="loader-pulse"></div>
+      <h3>Despertando el servidor...</h3>
+      <p>Esto tomará unos segundos más debido al cold start de Render.</p>
+    </div>
+
+    <!-- LISTADO DE TICKETS -->
+    <div *ngIf="!isLoading() && !isWakingUp() && tickets().length === 0" class="empty-state">
+      <span class="empty-icon">📂</span>
+      <h3>No se encontraron tickets</h3>
+      <p>Intenta ajustar los filtros de búsqueda.</p>
+    </div>
+
+    <div class="tickets-grid" *ngIf="!isLoading() && !isWakingUp() && tickets().length > 0">
+      <div class="ticket-card" *ngFor="let ticket of tickets()" 
+           [class.resolved]="ticket.status === 'RESUELTO' || ticket.status === 'CERRADO'" 
+           [routerLink]="['/ticket', ticket.id]">
+        
+        <div class="card-meta">
+          <span class="prio-tag" [ngClass]="'prio-' + (ticket.aiPriority?.toLowerCase() || 'baja')">
+            {{ ticket.aiPriority || 'Pendiente' }}
+          </span>
+          <span class="category-badge">{{ ticket.aiCategory }}</span>
+        </div>
+
+        <div class="card-content">
+          <h3>{{ ticket.title }}</h3>
+          <p class="desc">{{ ticket.description }}</p>
           
-          <div class="card-meta">
-            <span class="prio-tag" [ngClass]="ticket.aiCategory === 'Analizando...' ? 'prio-analizando' : 'prio-' + (ticket.aiPriority ? ticket.aiPriority.toLowerCase() : 'baja')">
-              {{ ticket.aiCategory === 'Analizando...' ? '🤖 Analizando...' : (ticket.aiPriority || 'Pendiente') }}
+          <div class="ia-insight">
+            <span class="robot-icon">🤖</span>
+            <p>{{ ticket.aiSummary }}</p>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <div class="user-info">
+            <span class="avatar">{{ ticket.customerEmail.charAt(0).toUpperCase() }}</span>
+            <span class="email">{{ ticket.customerEmail }}</span>
+          </div>
+          
+          <div class="actions">
+            <button *ngIf="ticket.status !== 'RESUELTO' && ticket.status !== 'CERRADO'" 
+                    class="btn-resolve" (click)="resolveTicket($event, ticket.id)">
+              Cerrar Ticket
+            </button>
+            <span *ngIf="ticket.status === 'RESUELTO' || ticket.status === 'CERRADO'" class="closed-label">
+              ✅ Resuelto
             </span>
-            @if (isAdmin()) {
-              <button class="btn-delete" (click)="deleteTicket($event, ticket.id)" title="Borrar">🗑️</button>
-            }
-          </div>
-
-          <div class="card-content">
-            <h3>{{ ticket.title }}</h3>
-            <p class="desc">{{ ticket.description }}</p>
-            
-            <div class="ia-insight">
-              <span class="robot-icon">🤖</span>
-              <p>{{ ticket.aiSummary }}</p>
-            </div>
-          </div>
-
-          <div class="card-footer">
-            <div class="user-info-group">
-              <div class="user">
-                <span class="avatar">{{ ticket.customerEmail.charAt(0).toUpperCase() }}</span>
-                <span class="email">{{ ticket.customerEmail }}</span>
-              </div>
-              @if (ticket.assignedToUsername) {
-                <div class="assigned-badge">
-                  👤 {{ ticket.assignedToUsername }}
-                </div>
-              }
-            </div>
-            
-            <div class="actions">
-              @if (ticket.status !== 'CERRADO') {
-                @if (!ticket.assignedToUsername) {
-                  <button class="btn-assign" (click)="assignToMe($event, ticket.id)">Atender</button>
-                }
-                <button class="btn-resolve" (click)="resolveTicket($event, ticket.id)">Cerrar</button>
-              } @else {
-                <span class="closed-label">Finalizado</span>
-              }
-            </div>
           </div>
         </div>
       </div>
-      
-      <!-- Paginación -->
-      <div class="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
-        <button class="btn btn-outline" (click)="prevPage()" [disabled]="currentPage() === 0">
-          ← Anterior
-        </button>
-        <span class="page-info" style="color: var(--text-muted); font-size: 0.9rem;">
-          Página {{ currentPage() + 1 }} de {{ totalPages() || 1 }}
-        </span>
-        <button class="btn btn-outline" (click)="nextPage()" [disabled]="currentPage() >= totalPages() - 1">
-          Siguiente →
-        </button>
-      </div>
-    }
+    </div>
+
+    <!-- PAGINACIÓN -->
+    <div class="pagination-footer" *ngIf="!isLoading() && totalPages() > 1">
+      <button class="btn-page" (click)="prevPage()" [disabled]="currentPage() === 0">Anterior</button>
+      <span class="page-info">Página {{ currentPage() + 1 }} de {{ totalPages() }}</span>
+      <button class="btn-page" (click)="nextPage()" [disabled]="currentPage() >= totalPages() - 1">Siguiente</button>
+    </div>
   </main>
 </div>
