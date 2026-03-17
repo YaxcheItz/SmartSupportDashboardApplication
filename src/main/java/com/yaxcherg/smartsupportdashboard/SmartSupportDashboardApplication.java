@@ -27,17 +27,17 @@ public class SmartSupportDashboardApplication {
             // Sembrar Usuarios de Prueba si no hay ninguno
             if (userRepository.count() == 0) {
                 // Admin
-                AppUser admin = new AppUser("admin", "admin@smart.com", passwordEncoder.encode("admin123"));
+                AppUser admin = new AppUser("admin", "admin@gmail.com", passwordEncoder.encode("admin123"));
                 admin.setRole("ROLE_ADMIN");
                 userRepository.save(admin);
 
                 // Agente
-                AppUser agent = new AppUser("agente", "agente@smart.com", passwordEncoder.encode("agente123"));
+                AppUser agent = new AppUser("agente", "agente@gmail.com", passwordEncoder.encode("agente123"));
                 agent.setRole("ROLE_EMPLOYEE");
                 userRepository.save(agent);
 
                 // Cliente/Usuario común
-                AppUser user = new AppUser("cliente", "cliente@smart.com", passwordEncoder.encode("cliente123"));
+                AppUser user = new AppUser("cliente", "cliente@gmail.com", passwordEncoder.encode("cliente123"));
                 user.setRole("ROLE_USER");
                 userRepository.save(user);
 
@@ -52,7 +52,7 @@ public class SmartSupportDashboardApplication {
                 Ticket t1 = new Ticket();
                 t1.setTitle("Problema de conexión");
                 t1.setDescription("No puedo entrar a mi cuenta desde ayer.");
-                t1.setCustomerEmail("juan@ejemplo.com");
+                t1.setCustomerEmail("cliente@gmail.com");
                 t1.setAiCategory("Soporte Técnico");
                 t1.setAiPriority("Alta");
                 t1.setAiTone("Frustrado");
@@ -62,7 +62,7 @@ public class SmartSupportDashboardApplication {
                 Ticket t2 = new Ticket();
                 t2.setTitle("Duda sobre mi factura");
                 t2.setDescription("¿Por qué me cobraron doble este mes?");
-                t2.setCustomerEmail("maria@ejemplo.com");
+                t2.setCustomerEmail("cliente@gmail.com");
                 t2.setAiCategory("Facturación");
                 t2.setAiPriority("Media");
                 t2.setAiTone("Preocupado");
