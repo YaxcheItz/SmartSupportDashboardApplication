@@ -38,6 +38,8 @@ public class AppUser {
     
     private String role = "ROLE_USER";
 
+    private String avatarUrl;
+
     public AppUser(String username, String email, String password) {
         this.username = username;
         this.email = email;

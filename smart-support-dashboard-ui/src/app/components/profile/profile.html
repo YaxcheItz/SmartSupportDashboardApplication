@@ -1,7 +1,19 @@
 <div class="profile-wrapper">
   <div class="profile-container">
+    
     <div class="profile-header">
-      <div class="avatar-large">{{ user()?.username?.charAt(0)?.toUpperCase() }}</div>
+      <div class="avatar-section">
+        <div class="avatar-large">
+          <img *ngIf="user()?.avatarUrl" [src]="user()?.avatarUrl" alt="Avatar">
+          <span *ngIf="!user()?.avatarUrl">{{ user()?.username?.charAt(0)?.toUpperCase() }}</span>
+          
+          <div class="upload-overlay" (click)="fileInput.click()">
+            <span *ngIf="!isUploading()">📷</span>
+            <span *ngIf="isUploading()" class="mini-spinner"></span>
+          </div>
+        </div>
+        <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" style="display: none">
+      </div>
       <h2>Configuración de Perfil</h2>
       <p class="subtitle">Actualiza tu información personal y contraseña.</p>
     </div>
@@ -10,7 +22,7 @@
       <div class="form-group">
         <label>Nombre de Usuario</label>
         <input type="text" formControlName="username" class="disabled-input">
-        <p class="field-hint">El nombre de usuario no se puede cambiar.</p>
+        <p class="field-hint">El nombre de usuario es permanente.</p>
       </div>
 
       <div class="form-group">
@@ -21,11 +33,11 @@
       <div class="form-group">
         <label>Nueva Contraseña</label>
         <input type="password" formControlName="password" placeholder="Mínimo 6 caracteres">
-        <p class="field-hint">Deja en blanco si no deseas cambiarla.</p>
+        <p class="field-hint">Solo completa este campo si deseas cambiar tu clave.</p>
       </div>
 
       <div class="profile-actions">
-        <button type="submit" class="btn btn-primary" [disabled]="profileForm.invalid || isLoading()">
+        <button type="submit" class="btn btn-primary" [disabled]="profileForm.invalid || isLoading() || isUploading()">
           {{ isLoading() ? 'Guardando...' : 'Guardar Cambios' }}
         </button>
       </div>

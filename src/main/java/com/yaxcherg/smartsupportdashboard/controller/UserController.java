@@ -29,7 +29,8 @@ public class UserController {
                 "id", user.getId(),
                 "username", user.getUsername(),
                 "email", user.getEmail(),
-                "role", user.getRole()
+                "role", user.getRole(),
+                "avatarUrl", user.getAvatarUrl() != null ? user.getAvatarUrl() : ""
         ));
     }
 
@@ -41,6 +42,10 @@ public class UserController {
 
         if (data.containsKey("email")) {
             user.setEmail(data.get("email"));
+        }
+
+        if (data.containsKey("avatarUrl")) {
+            user.setAvatarUrl(data.get("avatarUrl"));
         }
 
         if (data.containsKey("password") && !data.get("password").isBlank()) {

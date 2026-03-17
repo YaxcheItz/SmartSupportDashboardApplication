@@ -8,6 +8,7 @@ export interface User {
   username: string;
   email: string;
   role?: string;
+  avatarUrl?: string;
 }
 
 export interface JwtResponse {
@@ -17,6 +18,7 @@ export interface JwtResponse {
   username: string;
   email: string;
   role: string;
+  avatarUrl?: string;
 }
 
 @Injectable({
@@ -40,13 +42,15 @@ export class AuthService {
     const email = localStorage.getItem('email');
     const id = localStorage.getItem('id');
     const role = localStorage.getItem('role');
+    const avatarUrl = localStorage.getItem('avatarUrl');
 
     if (token && username && email) {
       this.currentUser.set({ 
         id: id ? Number(id) : undefined, 
         username, 
         email,
-        role: role || undefined
+        role: role || undefined,
+        avatarUrl: avatarUrl || undefined
       });
     }
   }
@@ -70,6 +74,7 @@ export class AuthService {
     localStorage.removeItem('email');
     localStorage.removeItem('id');
     localStorage.removeItem('role');
+    localStorage.removeItem('avatarUrl');
     this.currentUser.set(null);
   }
 
@@ -102,6 +107,9 @@ export class AuthService {
     localStorage.setItem('username', response.username);
     localStorage.setItem('email', response.email);
     localStorage.setItem('role', response.role);
+    if (response.avatarUrl) {
+      localStorage.setItem('avatarUrl', response.avatarUrl);
+    }
     if (response.id) {
         localStorage.setItem('id', response.id.toString());
     }
@@ -110,7 +118,8 @@ export class AuthService {
       id: response.id,
       username: response.username,
       email: response.email,
-      role: response.role
+      role: response.role,
+      avatarUrl: response.avatarUrl
     });
   }
 }
