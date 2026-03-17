@@ -2,8 +2,11 @@ package com.yaxcherg.smartsupportdashboard.service;
 
 import com.yaxcherg.smartsupportdashboard.dto.TicketRequestDTO;
 import com.yaxcherg.smartsupportdashboard.dto.TicketResponseDTO;
+import com.yaxcherg.smartsupportdashboard.model.AppUser;
 import com.yaxcherg.smartsupportdashboard.model.Ticket;
 import com.yaxcherg.smartsupportdashboard.repository.TicketRepository;
+import com.yaxcherg.smartsupportdashboard.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
@@ -54,13 +57,36 @@ public class TicketService {
 
         return responseDTO;
     }
-    public Page<TicketResponseDTO> getAllTickets(Pageable pageable, AppUser user) {
-        // Lógica de roles: Si es ADMIN ve todo, si es USER solo lo suyo
-        if (user.getRole().equals("ROLE_ADMIN")) {
-            return ticketRepository.findAll(pageable).map(this::mapToResponse);
-        } else {
-            return ticketRepository.findByCreatedBy(user, pageable).map(this::mapToResponse);
-        }
+
+    public Page<TicketResponseDTO> getAllTickets(Pageable pageable, AppUser user, 
+                                               String title, String status, 
+                                               String priority, String category) {
+        Specification<Ticket> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // 1. Filtrado por rol (Seguridad)
+            if (!user.getRole().equals("ROLE_ADMIN")) {
+                predicates.add(cb.equal(root.get("createdBy"), user));
+            }
+
+            // 2. Filtros opcionales
+            if (title != null && !title.isEmpty()) {
+                predicates.add(cb.like(cb.lower(root.get("title")), "%" + title.toLowerCase() + "%"));
+            }
+            if (status != null && !status.isEmpty()) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+            if (priority != null && !priority.isEmpty()) {
+                predicates.add(cb.equal(root.get("aiPriority"), priority));
+            }
+            if (category != null && !category.isEmpty()) {
+                predicates.add(cb.equal(root.get("aiCategory"), category));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return ticketRepository.findAll(spec, pageable).map(this::mapToResponse);
     }
 
     public Optional<TicketResponseDTO> getTicketById(Long id) {

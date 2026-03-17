@@ -51,10 +51,14 @@ public class TicketController {
     @GetMapping
     public ResponseEntity<Page<TicketResponseDTO>> getAllTickets(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) String category) {
         AppUser user = getCurrentUser();
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        return ResponseEntity.ok(ticketService.getAllTickets(pageable, user));
+        return ResponseEntity.ok(ticketService.getAllTickets(pageable, user, title, status, priority, category));
     }
 
     @GetMapping("/{id}")
