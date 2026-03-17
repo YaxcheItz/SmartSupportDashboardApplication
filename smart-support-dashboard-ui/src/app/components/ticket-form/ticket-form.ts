@@ -8,6 +8,7 @@ import {
 } from '@angular/forms';
 import { TicketService } from '../../services/ticket';
 import { ToastService } from '../../services/toast';
+import { AuthService } from '../../services/auth';
 import { Router } from '@angular/router';
 
 @Component({
@@ -23,13 +24,15 @@ export class TicketForm {
 
   private fb = inject(FormBuilder);
   private ticketService = inject(TicketService);
+  private authService = inject(AuthService);
   private toastService = inject(ToastService);
   private router = inject(Router);
-  private cdr = inject(ChangeDetectorRef); // <-- Para arreglar el error de Angular
+  private cdr = inject(ChangeDetectorRef);
 
   constructor() {
+    const user = this.authService.getCurrentUser();
     this.ticketForm = this.fb.group({
-      customerEmail: ['', [Validators.required, Validators.email]],
+      customerEmail: [user?.email || '', [Validators.required, Validators.email]],
       title: ['', [Validators.required, Validators.minLength(5)]],
       description: ['', [Validators.required, Validators.minLength(15)]],
     });
@@ -38,12 +41,13 @@ export class TicketForm {
   onSubmit() {
     if (this.ticketForm.valid) {
       this.isSubmitting = true;
-      this.cdr.detectChanges(); // <-- Fuerza a Angular a notar el cambio antes de seguir
+      this.cdr.detectChanges();
 
       this.ticketService.createTicket(this.ticketForm.value).subscribe({
         next: (response) => {
           this.toastService.showSuccess('Ticket creado y analizado por la IA');
-          this.router.navigate(['/dashboard']);
+          const isAdmin = this.authService.isAdmin();
+          this.router.navigate([isAdmin ? '/dashboard' : '/portal']);
         },
         error: (error) => {
           this.isSubmitting = false;

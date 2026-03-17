@@ -2,6 +2,8 @@ package com.yaxcherg.smartsupportdashboard.controller;
 
 import com.yaxcherg.smartsupportdashboard.dto.TicketRequestDTO;
 import com.yaxcherg.smartsupportdashboard.dto.TicketResponseDTO;
+import com.yaxcherg.smartsupportdashboard.model.AppUser;
+import com.yaxcherg.smartsupportdashboard.repository.UserRepository;
 import com.yaxcherg.smartsupportdashboard.service.TicketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -11,6 +13,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -22,23 +27,34 @@ import java.util.Optional;
 public class TicketController {
 
     private final TicketService ticketService;
+    private final UserRepository userRepository;
 
     @Autowired
-    public TicketController(TicketService ticketService) {
+    public TicketController(TicketService ticketService, UserRepository userRepository) {
         this.ticketService = ticketService;
+        this.userRepository = userRepository;
+    }
+
+    private AppUser getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User Not Found with username: " + username));
     }
 
     @PostMapping
     public ResponseEntity<TicketResponseDTO> createTicket(@Valid @RequestBody TicketRequestDTO ticketDTO) {
-        return new ResponseEntity<>(ticketService.createTicket(ticketDTO), HttpStatus.CREATED);
+        AppUser user = getCurrentUser();
+        return new ResponseEntity<>(ticketService.createTicket(ticketDTO, user), HttpStatus.CREATED);
     }
 
     @GetMapping
     public ResponseEntity<Page<TicketResponseDTO>> getAllTickets(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
+        AppUser user = getCurrentUser();
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        return ResponseEntity.ok(ticketService.getAllTickets(pageable));
+        return ResponseEntity.ok(ticketService.getAllTickets(pageable, user));
     }
 
     @GetMapping("/{id}")

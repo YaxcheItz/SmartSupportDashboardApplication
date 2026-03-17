@@ -30,12 +30,13 @@ public class TicketService {
         this.geminiAiService = geminiAiService;
     }
 
-    public TicketResponseDTO createTicket(TicketRequestDTO ticketDTO) {
+    public TicketResponseDTO createTicket(TicketRequestDTO ticketDTO, AppUser createdBy) {
         Ticket ticket = new Ticket();
         ticket.setTitle(ticketDTO.getTitle());
         ticket.setDescription(ticketDTO.getDescription());
         ticket.setCustomerEmail(ticketDTO.getCustomerEmail());
         ticket.setStatus("ABIERTO");
+        ticket.setCreatedBy(createdBy); // Asignar el creador del ticket
         
         Ticket savedTicket = ticketRepository.save(ticket);
         
@@ -45,8 +46,13 @@ public class TicketService {
         return mapToResponse(savedTicket);
     }
 
-    public Page<TicketResponseDTO> getAllTickets(Pageable pageable) {
-        return ticketRepository.findAll(pageable).map(this::mapToResponse);
+    public Page<TicketResponseDTO> getAllTickets(Pageable pageable, AppUser user) {
+        // Lógica de roles: Si es ADMIN ve todo, si es USER solo lo suyo
+        if (user.getRole().equals("ROLE_ADMIN")) {
+            return ticketRepository.findAll(pageable).map(this::mapToResponse);
+        } else {
+            return ticketRepository.findByCreatedBy(user, pageable).map(this::mapToResponse);
+        }
     }
 
     public Optional<TicketResponseDTO> getTicketById(Long id) {

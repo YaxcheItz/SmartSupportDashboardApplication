@@ -1,0 +1,50 @@
+<div class="portal-container">
+  <header class="portal-header">
+    <div class="header-content">
+      <h1>Hola, {{ username }} 👋</h1>
+      <p>Bienvenido a tu portal de soporte técnico. Aquí puedes seguir tus solicitudes.</p>
+    </div>
+    <a routerLink="/nuevo-ticket" class="btn-create">
+      <span class="icon">+</span> Nuevo Ticket
+    </a>
+  </header>
+
+  <main class="tickets-grid">
+    <div *ngIf="isLoading" class="loader">Cargando tus solicitudes...</div>
+
+    <div *ngIf="!isLoading && tickets.length === 0" class="empty-state">
+      <div class="empty-icon">📂</div>
+      <h3>No tienes tickets activos</h3>
+      <p>Si tienes algún problema, crea un ticket y nuestro equipo te ayudará pronto.</p>
+    </div>
+
+    <div class="ticket-table-wrapper" *ngIf="!isLoading && tickets.length > 0">
+      <table class="ticket-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Título</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let ticket of tickets">
+            <td>#{{ ticket.id }}</td>
+            <td class="ticket-title">{{ ticket.title }}</td>
+            <td>{{ ticket.createdAt | date:'short' }}</td>
+            <td>
+              <span class="status-badge" [ngClass]="getStatusClass(ticket.status)">
+                {{ ticket.status }}
+              </span>
+            </td>
+            <td>
+              <a [routerLink]="['/ticket', ticket.id]" class="btn-view">Ver Detalles</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>

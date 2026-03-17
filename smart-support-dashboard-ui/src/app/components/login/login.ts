@@ -53,8 +53,14 @@ export class LoginComponent {
       this.authService.login(username, password).subscribe({
         next: (res) => {
           this.isLoading.set(false);
-          this.toastService.showSuccess('¡Bienvenido Agente!');
-          this.router.navigate(['/dashboard']);
+          const isAdmin = res.role === 'ROLE_ADMIN';
+          this.toastService.showSuccess(isAdmin ? '¡Bienvenido Agente!' : '¡Hola, bienvenido de nuevo!');
+          
+          if (isAdmin) {
+            this.router.navigate(['/dashboard']);
+          } else {
+            this.router.navigate(['/portal']);
+          }
         },
         error: (err) => {
           this.isLoading.set(false);

@@ -39,4 +39,8 @@ public class Ticket {
     @ManyToOne
     @JoinColumn(name = "assigned_to_id")
     private AppUser assignedTo;
+
+    @ManyToOne
+    @JoinColumn(name = "created_by_id")
+    private AppUser createdBy;
 }
