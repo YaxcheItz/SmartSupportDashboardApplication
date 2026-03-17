@@ -57,7 +57,7 @@ public class TicketService {
             List<Predicate> predicates = new ArrayList<>();
 
             // 1. Filtrado por rol (Seguridad)
-            if (!user.getRole().equals("ROLE_ADMIN")) {
+            if (!user.getRole().equals("ROLE_ADMIN") && !user.getRole().equals("ROLE_EMPLOYEE")) {
                 predicates.add(cb.equal(root.get("createdBy"), user));
             }
 
