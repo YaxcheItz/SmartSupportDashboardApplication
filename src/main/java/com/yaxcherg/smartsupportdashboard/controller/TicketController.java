@@ -2,10 +2,13 @@ package com.yaxcherg.smartsupportdashboard.controller;
 
 import com.yaxcherg.smartsupportdashboard.dto.TicketRequestDTO;
 import com.yaxcherg.smartsupportdashboard.dto.TicketResponseDTO;
+import com.yaxcherg.smartsupportdashboard.dto.CommentRequestDTO;
+import com.yaxcherg.smartsupportdashboard.dto.CommentResponseDTO;
+import com.yaxcherg.smartsupportdashboard.service.CommentService;
 import com.yaxcherg.smartsupportdashboard.model.AppUser;
 import com.yaxcherg.smartsupportdashboard.repository.UserRepository;
-import com.yaxcherg.smartsupportdashboard.service.GeminiAiService;
 import com.yaxcherg.smartsupportdashboard.service.TicketService;
+import com.yaxcherg.smartsupportdashboard.service.GeminiAiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,12 +33,28 @@ public class TicketController {
     private final TicketService ticketService;
     private final UserRepository userRepository;
     private final GeminiAiService geminiAiService;
+    private final CommentService commentService;
 
     @Autowired
-    public TicketController(TicketService ticketService, UserRepository userRepository, GeminiAiService geminiAiService) {
+    public TicketController(TicketService ticketService, UserRepository userRepository, 
+                            GeminiAiService geminiAiService, CommentService commentService) {
         this.ticketService = ticketService;
         this.userRepository = userRepository;
         this.geminiAiService = geminiAiService;
+        this.commentService = commentService;
+    }
+
+    // --- ENDPOINTS DE COMENTARIOS ---
+
+    @GetMapping("/{id}/comments")
+    public ResponseEntity<List<CommentResponseDTO>> getComments(@PathVariable Long id) {
+        return ResponseEntity.ok(commentService.getCommentsByTicketId(id));
+    }
+
+    @PostMapping("/{id}/comments")
+    public ResponseEntity<CommentResponseDTO> addComment(@PathVariable Long id, @Valid @RequestBody CommentRequestDTO dto) {
+        AppUser user = getCurrentUser();
+        return new ResponseEntity<>(commentService.addComment(id, dto, user), HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}/suggest-response")
