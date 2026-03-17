@@ -200,7 +200,10 @@ export class Reports implements OnInit {
     this.http.get<Record<string, number>>(`${this.apiUrl}/stats/categories`).subscribe(stats => {
       this.categoryChartData = {
         labels: Object.keys(stats),
-        datasets: [{ ...this.categoryChartData.datasets[0], data: Object.values(stats) }]
+        datasets: [{ 
+          ...this.categoryChartData.datasets[0], 
+          data: Object.values(stats) 
+        }]
       };
     });
 
@@ -208,13 +211,17 @@ export class Reports implements OnInit {
     this.http.get<Record<string, number>>(`${this.apiUrl}/stats/priorities`).subscribe(stats => {
       this.priorityChartData = {
         labels: Object.keys(stats),
-        datasets: [{ ...this.priorityChartData.datasets[0], data: Object.values(stats) }]
+        datasets: [{ 
+          ...this.priorityChartData.datasets[0], 
+          data: Object.values(stats) 
+        }]
       };
     });
 
     // 3. Resueltos
     this.http.get<any>(`${this.apiUrl}?size=1000`).subscribe(res => {
-      const resolved = res.content.filter((t: any) => t.status === 'RESUELTO' || t.status === 'CERRADO').length;
+      const tickets = res.content || [];
+      const resolved = tickets.filter((t: any) => t.status === 'RESUELTO' || t.status === 'CERRADO').length;
       this.totalResolved.set(resolved);
     });
   }
