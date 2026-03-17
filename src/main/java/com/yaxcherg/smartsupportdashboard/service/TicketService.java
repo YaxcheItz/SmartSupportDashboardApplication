@@ -4,12 +4,14 @@ import com.yaxcherg.smartsupportdashboard.dto.TicketRequestDTO;
 import com.yaxcherg.smartsupportdashboard.dto.TicketResponseDTO;
 import com.yaxcherg.smartsupportdashboard.model.Ticket;
 import com.yaxcherg.smartsupportdashboard.repository.TicketRepository;
-import com.yaxcherg.smartsupportdashboard.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import jakarta.persistence.criteria.Predicate;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,12 +24,15 @@ public class TicketService {
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
     private final GeminiAiService geminiAiService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Autowired
-    public TicketService(TicketRepository ticketRepository, UserRepository userRepository, GeminiAiService geminiAiService) {
+    public TicketService(TicketRepository ticketRepository, UserRepository userRepository, 
+                         GeminiAiService geminiAiService, SimpMessagingTemplate messagingTemplate) {
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
         this.geminiAiService = geminiAiService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     public TicketResponseDTO createTicket(TicketRequestDTO ticketDTO, AppUser createdBy) {
@@ -37,15 +42,18 @@ public class TicketService {
         ticket.setCustomerEmail(ticketDTO.getCustomerEmail());
         ticket.setStatus("ABIERTO");
         ticket.setCreatedBy(createdBy); // Asignar el creador del ticket
-        
+
         Ticket savedTicket = ticketRepository.save(ticket);
-        
+        TicketResponseDTO responseDTO = mapToResponse(savedTicket);
+
+        // NOTIFICAR AL FRONTEND VIA WEBSOCKETS (Nuevo ticket recibido)
+        messagingTemplate.convertAndSend("/topic/tickets", savedTicket);
+
         // Llamar a la IA de forma asíncrona
         geminiAiService.analyzeAndSaveTicket(savedTicket.getId(), savedTicket.getDescription());
-        
-        return mapToResponse(savedTicket);
-    }
 
+        return responseDTO;
+    }
     public Page<TicketResponseDTO> getAllTickets(Pageable pageable, AppUser user) {
         // Lógica de roles: Si es ADMIN ve todo, si es USER solo lo suyo
         if (user.getRole().equals("ROLE_ADMIN")) {

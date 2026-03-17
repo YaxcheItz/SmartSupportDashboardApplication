@@ -18,10 +18,17 @@ import { Subscription } from 'rxjs';
 })
 export class TicketList implements OnInit, OnDestroy {
   tickets = signal<Ticket[]>([]);
-  isLoading = signal<boolean>(true); // <-- NUEVO: Estado de carga
-  isWakingUp = signal<boolean>(false); // <-- NUEVO: Para el servidor dormido
-  activeFilter = signal<string>('Todos');
-  searchQuery = signal<string>('');
+  isLoading = signal<boolean>(true);
+  isWakingUp = signal<boolean>(false);
+  
+  // Filtros Avanzados
+  filterValues = {
+    title: '',
+    status: '',
+    priority: '',
+    category: ''
+  };
+  private searchTimeout: any;
   
   // Paginación
   currentPage = signal<number>(0);
@@ -36,30 +43,6 @@ export class TicketList implements OnInit, OnDestroy {
 
   isAdmin = computed(() => this.authService.isAdmin());
 
-  // Contador de tickets por prioridad (para los filtros)
-  counts = computed(() => {
-    const all = this.tickets();
-    return {
-      Todos: all.length,
-      Urgente: all.filter(t => t.aiPriority === 'Urgente').length,
-      Alta: all.filter(t => t.aiPriority === 'Alta').length,
-      Media: all.filter(t => t.aiPriority === 'Media').length,
-      Baja: all.filter(t => t.aiPriority === 'Baja').length,
-    };
-  });
-
-  filteredTickets = computed(() => {
-    const filter = this.activeFilter();
-    const query = this.searchQuery().toLowerCase();
-    
-    return this.tickets().filter(t => {
-      const matchesFilter = filter === 'Todos' || t.aiPriority === filter;
-      const matchesQuery = (t.title?.toLowerCase() || '').includes(query) || 
-                           (t.customerEmail?.toLowerCase() || '').includes(query);
-      return matchesFilter && matchesQuery;
-    });
-  });
-
   ngOnInit(): void {
     this.loadTickets(0);
     
@@ -67,19 +50,29 @@ export class TicketList implements OnInit, OnDestroy {
     this.webSocketService.connect();
     this.wsSubscription = this.webSocketService.ticketUpdates$.subscribe(updatedTicket => {
       console.log('Recibida actualización en tiempo real:', updatedTicket);
-      // Actualizar el ticket en la lista si existe
+      
       this.tickets.update(currentTickets => {
         const index = currentTickets.findIndex(t => t.id === updatedTicket.id);
+        
         if (index !== -1) {
+          // Si el ticket ya existe, lo actualizamos (ej: la IA terminó de analizar)
           const newList = [...currentTickets];
+          const oldTicket = currentTickets[index];
           newList[index] = updatedTicket;
-          // Mostrar notificación solo si pasó de Analizando a otra cosa
-          if (currentTickets[index].aiCategory === 'Analizando...' && updatedTicket.aiCategory !== 'Analizando...') {
-             this.toastService.showSuccess(`La IA ha terminado de analizar el ticket #${updatedTicket.id}`);
+          
+          if (oldTicket.aiCategory === 'Analizando...' && updatedTicket.aiCategory !== 'Analizando...') {
+             this.toastService.showSuccess(`Análisis finalizado para el ticket #${updatedTicket.id}`);
           }
           return newList;
+        } else {
+          // Si el ticket NO existe, es uno NUEVO (Notificamos al Admin)
+          if (this.isAdmin()) {
+            this.toastService.showSuccess(`🔔 Nuevo ticket recibido: "${updatedTicket.title}"`);
+            // Añadir al inicio de la lista
+            return [updatedTicket, ...currentTickets];
+          }
+          return currentTickets;
         }
-        return currentTickets;
       });
     });
   }
@@ -88,11 +81,20 @@ export class TicketList implements OnInit, OnDestroy {
     if (this.wsSubscription) {
       this.wsSubscription.unsubscribe();
     }
+    this.webSocketService.disconnect();
+  }
+
+  // Método para aplicar filtros con retraso (debounce)
+  onFilterChange() {
+    if (this.searchTimeout) clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+      this.loadTickets(0);
+    }, 400);
   }
 
   loadTickets(page: number): void {
     this.isLoading.set(true);
-    this.ticketService.getAllTickets(page, this.pageSize).subscribe({
+    this.ticketService.getAllTickets(page, this.pageSize, this.filterValues).subscribe({
       next: (data) => {
         this.tickets.set(data.content || []);
         this.currentPage.set(data.number);
@@ -102,10 +104,8 @@ export class TicketList implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.isLoading.set(false);
-        // Si el status es 0, es muy probable que el servidor esté despertando
         if (error.status === 0) {
           this.isWakingUp.set(true);
-          // Intentamos de nuevo automáticamente en 5 segundos
           setTimeout(() => this.loadTickets(page), 5000);
         } else {
           console.error('Error al cargar tickets:', error);
@@ -126,10 +126,8 @@ export class TicketList implements OnInit, OnDestroy {
     }
   }
 
-  setFilter(priority: string) { this.activeFilter.set(priority); }
-
   resolveTicket(event: Event, id: number | undefined) {
-    event.stopPropagation(); // Evita que el click abra los detalles
+    event.stopPropagation();
     if (!id) return;
     this.ticketService.resolveTicket(id).subscribe({
       next: (res) => {
@@ -140,7 +138,7 @@ export class TicketList implements OnInit, OnDestroy {
   }
 
   deleteTicket(event: Event, id: number | undefined) {
-    event.stopPropagation(); // ¡CLAVE PARA QUE FUNCIONE!
+    event.stopPropagation();
     if (!id) return;
 
     if (confirm('¿Eliminar este ticket permanentemente?')) {
