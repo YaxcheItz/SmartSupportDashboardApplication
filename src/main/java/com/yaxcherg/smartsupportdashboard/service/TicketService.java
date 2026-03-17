@@ -26,12 +26,15 @@ public class TicketService {
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
     private final GeminiAiService geminiAiService;
+    private final EmailService emailService;
 
     @Autowired
-    public TicketService(TicketRepository ticketRepository, UserRepository userRepository, GeminiAiService geminiAiService) {
+    public TicketService(TicketRepository ticketRepository, UserRepository userRepository, 
+                         GeminiAiService geminiAiService, EmailService emailService) {
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
         this.geminiAiService = geminiAiService;
+        this.emailService = emailService;
     }
 
     public TicketResponseDTO createTicket(TicketRequestDTO ticketDTO, AppUser createdBy) {
@@ -89,7 +92,12 @@ public class TicketService {
     public Optional<TicketResponseDTO> resolveTicket(Long id) {
         return ticketRepository.findById(id).map(ticket -> {
             ticket.setStatus("RESUELTO");
-            return mapToResponse(ticketRepository.save(ticket));
+            Ticket savedTicket = ticketRepository.save(ticket);
+            
+            // ENVIAR CORREO DE RESOLUCIÓN AL CLIENTE
+            emailService.sendResolutionEmail(savedTicket.getCustomerEmail(), savedTicket.getTitle());
+            
+            return mapToResponse(savedTicket);
         });
     }
 
