@@ -41,7 +41,8 @@ public class SmartSupportDashboardApplication {
                 user.setRole("ROLE_USER");
                 userRepository.save(user);
 
-                System.out.println("✅ Se han insertated 3 usuarios de prueba (admin, agente, cliente).");
+                System.out.println("✅ Se han insertado 3 usuarios de prueba (admin, agente, cliente).");
+
             }
 
             // Si la base de datos está vacía, mete dos tickets de prueba
