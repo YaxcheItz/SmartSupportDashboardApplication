@@ -28,6 +28,10 @@ public class Ticket {
     @Column(length = 500)
     private String aiSummary;
 
+    // URL de la imagen adjunta (Supabase Storage)
+    @Column(length = 1000)
+    private String attachmentUrl;
+
     // Para saber cuándo se creó el ticket
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

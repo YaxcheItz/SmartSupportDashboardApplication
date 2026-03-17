@@ -49,6 +49,13 @@ export class TicketService {
     return this.http.get<{ suggestion: string }>(`${this.apiUrl}/${id}/suggest-response`);
   }
 
+  // --- MÉTODOS DE ARCHIVOS ---
+  uploadFile(file: File): Observable<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string }>(`${this.apiUrl}/upload`, formData);
+  }
+
   // --- NUEVOS MÉTODOS PARA COMENTARIOS ---
 
   getComments(ticketId: number): Observable<Comment[]> {

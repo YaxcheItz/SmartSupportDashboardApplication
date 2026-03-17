@@ -126,6 +126,55 @@ textarea:focus {
   content: "⚠️";
 }
 
+/* FILE UPLOAD STYLES */
+.file-upload-group {
+  margin-top: 1rem;
+}
+
+.file-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.file-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.file-custom-ui {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--bg-color);
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-color);
+  transition: all 0.2s;
+}
+
+.file-input-wrapper:hover .file-custom-ui {
+  border-color: var(--primary-color);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.file-icon {
+  font-size: 1.25rem;
+}
+
+.file-text {
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Submit Button */
 .submit-btn {
   width: 100%;

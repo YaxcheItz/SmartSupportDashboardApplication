@@ -39,6 +39,7 @@ public class TicketService {
         ticket.setTitle(ticketDTO.getTitle());
         ticket.setDescription(ticketDTO.getDescription());
         ticket.setCustomerEmail(ticketDTO.getCustomerEmail());
+        ticket.setAttachmentUrl(ticketDTO.getAttachmentUrl());
         ticket.setStatus("ABIERTO");
         ticket.setCreatedBy(createdBy); // Asignar el creador del ticket
         
@@ -125,6 +126,7 @@ public class TicketService {
         dto.setAiPriority(ticket.getAiPriority());
         dto.setAiTone(ticket.getAiTone());
         dto.setAiSummary(ticket.getAiSummary());
+        dto.setAttachmentUrl(ticket.getAttachmentUrl());
         dto.setCreatedAt(ticket.getCreatedAt());
         dto.setStatus(ticket.getStatus());
         

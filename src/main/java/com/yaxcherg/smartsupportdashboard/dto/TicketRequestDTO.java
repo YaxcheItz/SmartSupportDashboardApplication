@@ -19,4 +19,6 @@ public class TicketRequestDTO {
     @NotBlank(message = "El correo electrónico es obligatorio")
     @Email(message = "Debe ser un formato de correo electrónico válido")
     private String customerEmail;
+    
+    private String attachmentUrl;
 }

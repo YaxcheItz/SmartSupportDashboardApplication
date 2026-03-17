@@ -21,6 +21,8 @@ import { Router } from '@angular/router';
 export class TicketForm {
   ticketForm: FormGroup;
   isSubmitting = false;
+  selectedFile: File | null = null;
+  filePreview: string | ArrayBuffer | null = null;
 
   private fb = inject(FormBuilder);
   private ticketService = inject(TicketService);
@@ -38,24 +40,75 @@ export class TicketForm {
     });
   }
 
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // Límite de 5MB
+        this.toastService.showError('El archivo es demasiado grande. Máximo 5MB.');
+        return;
+      }
+      this.selectedFile = file;
+
+      // Generar vista previa si es imagen
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = e => this.filePreview = reader.result;
+        reader.readAsDataURL(file);
+      } else {
+        this.filePreview = null;
+      }
+    }
+  }
+
+  removeFile() {
+    this.selectedFile = null;
+    this.filePreview = null;
+  }
+
   onSubmit() {
     if (this.ticketForm.valid) {
       this.isSubmitting = true;
       this.cdr.detectChanges();
 
-      this.ticketService.createTicket(this.ticketForm.value).subscribe({
-        next: (response) => {
-          this.toastService.showSuccess('Ticket creado y analizado por la IA');
-          const isStaff = this.authService.isStaff();
-          this.router.navigate([isStaff ? '/dashboard' : '/portal']);
-        },
-        error: (error) => {
-          this.isSubmitting = false;
-          this.cdr.detectChanges();
-          this.toastService.showError('Error al crear el ticket. Revisa la conexión.');
-          console.error('Error al crear ticket', error);
-        },
-      });
+      if (this.selectedFile) {
+        // Primero subir la imagen
+        this.ticketService.uploadFile(this.selectedFile).subscribe({
+          next: (res) => {
+            // Guardar ticket con URL de imagen
+            this.saveTicket(res.url);
+          },
+          error: (err) => {
+            this.isSubmitting = false;
+            this.cdr.detectChanges();
+            this.toastService.showError('Error al subir el archivo adjunto.');
+            console.error('Error subiendo archivo', err);
+          }
+        });
+      } else {
+        // Guardar sin imagen
+        this.saveTicket();
+      }
     }
+  }
+
+  private saveTicket(attachmentUrl?: string) {
+    const ticketData = { ...this.ticketForm.value };
+    if (attachmentUrl) {
+      ticketData.attachmentUrl = attachmentUrl;
+    }
+
+    this.ticketService.createTicket(ticketData).subscribe({
+      next: (response) => {
+        this.toastService.showSuccess('Ticket creado y analizado por la IA');
+        const isStaff = this.authService.isStaff();
+        this.router.navigate([isStaff ? '/dashboard' : '/portal']);
+      },
+      error: (error) => {
+        this.isSubmitting = false;
+        this.cdr.detectChanges();
+        this.toastService.showError('Error al crear el ticket. Revisa la conexión.');
+        console.error('Error al crear ticket', error);
+      },
+    });
   }
 }

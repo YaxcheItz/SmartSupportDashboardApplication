@@ -7,6 +7,7 @@ export interface Ticket {
   aiPriority?: string;
   aiTone?: string;
   aiSummary?: string;
+  attachmentUrl?: string;
   createdAt?: string;
   status?: string;
   assignedToUsername?: string;

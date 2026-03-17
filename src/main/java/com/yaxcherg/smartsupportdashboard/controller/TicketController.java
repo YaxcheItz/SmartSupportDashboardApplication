@@ -9,6 +9,7 @@ import com.yaxcherg.smartsupportdashboard.model.AppUser;
 import com.yaxcherg.smartsupportdashboard.repository.UserRepository;
 import com.yaxcherg.smartsupportdashboard.service.TicketService;
 import com.yaxcherg.smartsupportdashboard.service.GeminiAiService;
+import com.yaxcherg.smartsupportdashboard.service.SupabaseStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
@@ -34,14 +36,29 @@ public class TicketController {
     private final UserRepository userRepository;
     private final GeminiAiService geminiAiService;
     private final CommentService commentService;
+    private final SupabaseStorageService storageService;
 
     @Autowired
     public TicketController(TicketService ticketService, UserRepository userRepository, 
-                            GeminiAiService geminiAiService, CommentService commentService) {
+                            GeminiAiService geminiAiService, CommentService commentService,
+                            SupabaseStorageService storageService) {
         this.ticketService = ticketService;
         this.userRepository = userRepository;
         this.geminiAiService = geminiAiService;
         this.commentService = commentService;
+        this.storageService = storageService;
+    }
+
+    // --- ENDPOINT PARA SUBIR ARCHIVOS ---
+    @PostMapping("/upload")
+    public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) {
+        try {
+            String url = storageService.uploadFile(file);
+            return ResponseEntity.ok(Map.of("url", url));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
     }
 
     // --- ENDPOINTS DE COMENTARIOS ---

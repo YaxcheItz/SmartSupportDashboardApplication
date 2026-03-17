@@ -16,6 +16,7 @@ public class TicketResponseDTO {
     private String aiPriority;
     private String aiTone;
     private String aiSummary;
+    private String attachmentUrl;
 
     // Metadatos
     private LocalDateTime createdAt;

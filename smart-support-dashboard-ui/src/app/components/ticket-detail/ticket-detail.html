@@ -36,6 +36,14 @@
       <h3 class="section-title client-title">Descripción Original</h3>
       <div class="content-box original-desc">
         {{ ticket()?.description }}
+        
+        <!-- IMAGEN ADJUNTA -->
+        <div *ngIf="ticket()?.attachmentUrl" class="attachment-preview">
+          <p class="attachment-label">📎 Archivo Adjunto:</p>
+          <a [href]="ticket()?.attachmentUrl" target="_blank">
+            <img [src]="ticket()?.attachmentUrl" alt="Archivo adjunto" class="img-attachment">
+          </a>
+        </div>
       </div>
       <div class="reporter-info">
         <div class="avatar">{{ ticket()?.customerEmail?.charAt(0)?.toUpperCase() }}</div>
