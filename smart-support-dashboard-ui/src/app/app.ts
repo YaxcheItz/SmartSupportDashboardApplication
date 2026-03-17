@@ -19,12 +19,18 @@ import { AuthService } from './services/auth';
         <!-- Navegación (Solo visible si está logueado) -->
         @if (authService.isLoggedIn()) {
           <nav class="global-nav">
-            <a routerLink="/dashboard" routerLinkActive="active-link" class="nav-link">
-              Dashboard
-            </a>
-            <a routerLink="/reportes" routerLinkActive="active-link" class="nav-link">
-              Reportes
-            </a>
+            @if (authService.isAdmin()) {
+              <a routerLink="/dashboard" routerLinkActive="active-link" class="nav-link">
+                Dashboard
+              </a>
+              <a routerLink="/reportes" routerLinkActive="active-link" class="nav-link">
+                Reportes
+              </a>
+            } @else {
+              <a routerLink="/portal" routerLinkActive="active-link" class="nav-link">
+                Mi Portal
+              </a>
+            }
             <a routerLink="/nuevo-ticket" routerLinkActive="active-link" class="nav-link">
               Crear Ticket
             </a>

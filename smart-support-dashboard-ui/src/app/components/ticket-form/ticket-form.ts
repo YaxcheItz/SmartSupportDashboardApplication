@@ -46,8 +46,8 @@ export class TicketForm {
       this.ticketService.createTicket(this.ticketForm.value).subscribe({
         next: (response) => {
           this.toastService.showSuccess('Ticket creado y analizado por la IA');
-          const isAdmin = this.authService.isAdmin();
-          this.router.navigate([isAdmin ? '/dashboard' : '/portal']);
+          const isStaff = this.authService.isStaff();
+          this.router.navigate([isStaff ? '/dashboard' : '/portal']);
         },
         error: (error) => {
           this.isSubmitting = false;

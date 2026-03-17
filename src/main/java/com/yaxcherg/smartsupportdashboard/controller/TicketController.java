@@ -5,6 +5,7 @@ import com.yaxcherg.smartsupportdashboard.dto.TicketResponseDTO;
 import com.yaxcherg.smartsupportdashboard.model.AppUser;
 import com.yaxcherg.smartsupportdashboard.repository.UserRepository;
 import com.yaxcherg.smartsupportdashboard.service.TicketService;
+import com.yaxcherg.smartsupportdashboard.service.GeminiAiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,11 +29,22 @@ public class TicketController {
 
     private final TicketService ticketService;
     private final UserRepository userRepository;
+    private final GeminiAiService geminiAiService;
 
     @Autowired
-    public TicketController(TicketService ticketService, UserRepository userRepository) {
+    public TicketController(TicketService ticketService, UserRepository userRepository, GeminiAiService geminiAiService) {
         this.ticketService = ticketService;
         this.userRepository = userRepository;
+        this.geminiAiService = geminiAiService;
+    }
+
+    @GetMapping("/{id}/suggest-response")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    public ResponseEntity<Map<String, String>> suggestResponse(@PathVariable Long id) {
+        return ticketService.getTicketById(id).map(ticket -> {
+            String suggestion = geminiAiService.generateResponseSuggestion(ticket.getTitle(), ticket.getDescription());
+            return ResponseEntity.ok(Map.of("suggestion", suggestion));
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     private AppUser getCurrentUser() {

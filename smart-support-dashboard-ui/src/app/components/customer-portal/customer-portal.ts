@@ -28,11 +28,12 @@ export class CustomerPortalComponent implements OnInit {
     this.isLoading = true;
     this.ticketService.getAllTickets(0, 50).subscribe({
       next: (response) => {
-        this.tickets = response.content;
+        this.tickets = response.content || [];
         this.isLoading = false;
       },
       error: (error) => {
         console.error('Error al cargar tus tickets', error);
+        this.tickets = [];
         this.isLoading = false;
       }
     });

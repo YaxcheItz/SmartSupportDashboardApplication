@@ -89,6 +89,14 @@ export class AuthService {
     return this.currentUser()?.role === 'ROLE_ADMIN';
   }
 
+  isEmployee(): boolean {
+    return this.currentUser()?.role === 'ROLE_EMPLOYEE';
+  }
+
+  isStaff(): boolean {
+    return this.isAdmin() || this.isEmployee();
+  }
+
   private saveAuthData(response: JwtResponse) {
     localStorage.setItem('token', response.token);
     localStorage.setItem('username', response.username);

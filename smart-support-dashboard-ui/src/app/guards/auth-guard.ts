@@ -6,12 +6,24 @@ export const authGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  // Le preguntamos al servicio si hay un usuario logueado
   if (authService.isLoggedIn()) {
-    return true; // Déjalo pasar
+    const isStaffRoute = state.url.includes('/dashboard') || state.url.includes('/reportes');
+    
+    // Si intenta ir a una ruta de agentes y no es agente, mandarlo a su portal
+    if (isStaffRoute && !authService.isStaff()) {
+      router.navigate(['/portal']);
+      return false;
+    }
+    
+    // Si es agente e intenta ir al portal de cliente, mejor mandarlo al dashboard
+    if (state.url.includes('/portal') && authService.isStaff()) {
+      router.navigate(['/dashboard']);
+      return false;
+    }
+
+    return true; 
   } else {
-    // Si no está logueado, lo pateamos a la pantalla de login
     router.navigate(['/login']);
-    return false; // No lo dejes pasar
+    return false;
   }
 };

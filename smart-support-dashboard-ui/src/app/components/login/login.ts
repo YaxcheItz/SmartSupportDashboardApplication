@@ -53,16 +53,15 @@ export class LoginComponent {
       this.authService.login(username, password).subscribe({
         next: (res) => {
           this.isLoading.set(false);
-          const isAdmin = res.role === 'ROLE_ADMIN';
-          this.toastService.showSuccess(isAdmin ? '¡Bienvenido Agente!' : '¡Hola, bienvenido de nuevo!');
-          
-          if (isAdmin) {
+          const isStaff = res.role === 'ROLE_ADMIN' || res.role === 'ROLE_EMPLOYEE';
+          this.toastService.showSuccess(isStaff ? '¡Bienvenido Agente!' : '¡Hola, bienvenido de nuevo!');
+
+          if (isStaff) {
             this.router.navigate(['/dashboard']);
           } else {
             this.router.navigate(['/portal']);
           }
-        },
-        error: (err) => {
+        },        error: (err) => {
           this.isLoading.set(false);
           this.errorMessage.set('Usuario o contraseña incorrectos');
           this.toastService.showError('Fallo en el inicio de sesión');
