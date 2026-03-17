@@ -156,4 +156,17 @@ export class TicketList implements OnInit, OnDestroy {
       });
     }
   }
+
+  assignToMe(event: Event, id: number | undefined) {
+    event.stopPropagation();
+    const user = this.authService.getCurrentUser();
+    if (!id || !user) return;
+
+    this.ticketService.assignTicket(id, user.username).subscribe({
+      next: (res) => {
+        this.tickets.update(list => list.map(t => t.id === id ? res : t));
+        this.toastService.showSuccess('Ticket asignado correctamente');
+      }
+    });
+  }
 }

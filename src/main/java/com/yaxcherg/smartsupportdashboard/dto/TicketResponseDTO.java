@@ -20,4 +20,5 @@ public class TicketResponseDTO {
     // Metadatos
     private LocalDateTime createdAt;
     private String status;
+    private String assignedToUsername;
 }
