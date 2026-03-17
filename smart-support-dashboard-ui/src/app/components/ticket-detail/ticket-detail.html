@@ -1,6 +1,6 @@
 <div class="detail-container">
   <button (click)="goBack()" class="btn btn-outline back-btn">
-    ← Volver al Dashboard
+    ← Volver atrás
   </button>
 
   @if (loading()) {
@@ -13,13 +13,14 @@
       <h1>{{ ticket()?.title }}</h1>
       <span
         class="status-badge"
-        [ngClass]="ticket()?.status === 'CERRADO' ? 'status-closed' : 'status-open'"
+        [ngClass]="ticket()?.status === 'CERRADO' || ticket()?.status === 'RESUELTO' ? 'status-closed' : 'status-open'"
       >
         {{ ticket()?.status }}
       </span>
     </div>
 
-    <div class="meta-tags">
+    <!-- METADATOS IA (Solo Staff) -->
+    <div class="meta-tags" *ngIf="isStaff">
       <span class="tag priority-tag" [ngClass]="'priority-' + ticket()?.aiPriority?.toLowerCase()">
         <span class="icon">⚡</span> Prioridad: {{ ticket()?.aiPriority }}
       </span>
@@ -32,7 +33,7 @@
     </div>
 
     <div class="content-section">
-      <h3 class="section-title client-title">Descripción Original del Cliente</h3>
+      <h3 class="section-title client-title">Descripción Original</h3>
       <div class="content-box original-desc">
         {{ ticket()?.description }}
       </div>
@@ -42,12 +43,81 @@
       </div>
     </div>
 
-    <div class="content-section">
-      <h3 class="section-title ai-title">Análisis de la IA</h3>
+    <!-- ANÁLISIS IA (Solo Staff) -->
+    <div class="content-section" *ngIf="isStaff">
+      <h3 class="section-title ai-title">🤖 Análisis de la IA</h3> 
       <div class="content-box ai-summary">
         "{{ ticket()?.aiSummary }}"
       </div>
     </div>
+
+    <!-- SECCIÓN DE RESPUESTA IA (Solo Staff) -->
+    <div class="content-section ai-response-section" *ngIf="isStaff">
+      <div class="section-header-ai">
+        <h3 class="section-title ai-reply-title">✨ Sugerencia de Respuesta IA</h3>
+        <button (click)="generateSuggestion()" class="btn-ai-sparkle" [disabled]="isGeneratingSuggestion()">
+          {{ isGeneratingSuggestion() ? 'Generando...' : 'Generar Respuesta' }}
+        </button>
+      </div>
+
+      <div class="ai-suggestion-box" *ngIf="aiSuggestion()">
+        <p>{{ aiSuggestion() }}</p>
+        <button class="btn-copy" (click)="copyToClipboard()">Copiar Respuesta</button>
+      </div>
+
+      <div class="ai-placeholder" *ngIf="!aiSuggestion() && !isGeneratingSuggestion()">
+        Haz clic en "Generar Respuesta" para obtener un borrador profesional.
+      </div>
+
+      <div class="ai-loading-placeholder" *ngIf="isGeneratingSuggestion()">
+        <div class="typing-indicator">
+          <span></span><span></span><span></span>
+        </div>
+        Analizando ticket y redactando...
+      </div>
+    </div>
+
+    <!-- HILO DE COMENTARIOS -->
+    <div class="comments-section">
+      <h3 class="section-title comments-title">💬 Historial de Conversación</h3>
+
+      <div class="comments-list">
+        <div class="empty-comments" *ngIf="comments().length === 0">
+          No hay comentarios en este ticket aún.
+        </div>
+
+        <div class="comment-item" *ngFor="let comment of comments()" 
+             [class.my-comment]="comment.authorUsername === currentUser?.username"
+             [class.staff-comment]="comment.authorRole === 'ROLE_ADMIN' || comment.authorRole === 'ROLE_EMPLOYEE'">
+
+          <div class="comment-avatar">
+            {{ comment.authorUsername.charAt(0).toUpperCase() }}
+          </div>
+
+          <div class="comment-body">
+            <div class="comment-header">
+              <span class="comment-author">{{ comment.authorUsername }}</span>
+              <span class="comment-badge" *ngIf="comment.authorRole === 'ROLE_ADMIN' || comment.authorRole === 'ROLE_EMPLOYEE'">Soporte</span>
+              <span class="comment-time">{{ comment.createdAt | date:'short' }}</span>
+            </div>
+            <div class="comment-content">
+              {{ comment.content }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORMULARIO DE COMENTARIOS -->
+      <form [formGroup]="commentForm" (ngSubmit)="addComment()" class="comment-form-container">
+        <textarea formControlName="content" class="comment-textarea" placeholder="Escribe tu mensaje aquí..." rows="3"></textarea>
+        <div class="comment-form-actions">
+          <button type="submit" class="btn-primary btn-send-comment" [disabled]="commentForm.invalid || isSubmittingComment()">
+            {{ isSubmittingComment() ? 'Enviando...' : 'Enviar Mensaje' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
   } @else {
     <div class="error-container">
       <h2>Ticket no encontrado</h2>
