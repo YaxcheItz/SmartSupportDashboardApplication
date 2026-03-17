@@ -24,9 +24,7 @@ export interface JwtResponse {
 })
 export class AuthService {
   // Detectar automáticamente la URL del API
-  private apiUrl = window.location.hostname === 'localhost' 
-    ? 'http://localhost:8080/api/auth'
-    : 'https://smart-support-dashboard.onrender.com/api/auth';
+  private apiUrl = `${environment.apiUrl}/auth`;
     
   private http = inject(HttpClient);
 

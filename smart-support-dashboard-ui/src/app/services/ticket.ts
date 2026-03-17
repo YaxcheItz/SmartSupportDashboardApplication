@@ -8,9 +8,7 @@ import { environment } from '../../environments/environment';
   providedIn: 'root',
 })
 export class TicketService {
-  private apiUrl = window.location.hostname === 'localhost' 
-    ? 'http://localhost:8080/api/tickets'
-    : 'https://smart-support-dashboard.onrender.com/api/tickets';
+  private apiUrl = `${environment.apiUrl}/tickets`;
 
   private http = inject(HttpClient);
 

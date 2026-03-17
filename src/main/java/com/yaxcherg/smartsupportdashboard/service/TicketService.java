@@ -30,7 +30,35 @@ public class TicketService {
         this.geminiAiService = geminiAiService;
     }
 
-    // ... (createTicket, getAllTickets, getTicketById, resolveTicket remain similar but use new mapToResponse)
+    public TicketResponseDTO createTicket(TicketRequestDTO ticketDTO) {
+        Ticket ticket = new Ticket();
+        ticket.setTitle(ticketDTO.getTitle());
+        ticket.setDescription(ticketDTO.getDescription());
+        ticket.setCustomerEmail(ticketDTO.getCustomerEmail());
+        ticket.setStatus("ABIERTO");
+        
+        Ticket savedTicket = ticketRepository.save(ticket);
+        
+        // Llamar a la IA de forma asíncrona
+        geminiAiService.analyzeAndSaveTicket(savedTicket.getId(), savedTicket.getDescription());
+        
+        return mapToResponse(savedTicket);
+    }
+
+    public Page<TicketResponseDTO> getAllTickets(Pageable pageable) {
+        return ticketRepository.findAll(pageable).map(this::mapToResponse);
+    }
+
+    public Optional<TicketResponseDTO> getTicketById(Long id) {
+        return ticketRepository.findById(id).map(this::mapToResponse);
+    }
+
+    public Optional<TicketResponseDTO> resolveTicket(Long id) {
+        return ticketRepository.findById(id).map(ticket -> {
+            ticket.setStatus("RESUELTO");
+            return mapToResponse(ticketRepository.save(ticket));
+        });
+    }
 
     // NUEVO: Método para asignar un ticket a un agente
     public Optional<TicketResponseDTO> assignTicket(Long ticketId, String username) {

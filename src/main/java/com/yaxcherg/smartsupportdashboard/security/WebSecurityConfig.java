@@ -77,8 +77,12 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Permitimos todos los orígenes temporalmente para asegurar que no sea CORS la causa del 502
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        // Permitimos orígenes específicos para producción (Render/Vercel) y desarrollo
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+                "http://localhost:4200",
+                "https://*.vercel.app",
+                "https://smart-support-dashboard.onrender.com"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(Arrays.asList("Authorization", "x-auth-token"));

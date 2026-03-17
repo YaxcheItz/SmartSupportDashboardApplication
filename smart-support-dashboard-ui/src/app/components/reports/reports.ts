@@ -53,6 +53,7 @@ import { environment } from '../../../environments/environment';
 })
 export class Reports implements OnInit {
   private http = inject(HttpClient);
+  // Detectar automáticamente la URL del API
   private apiUrl = window.location.hostname === 'localhost' 
     ? 'http://localhost:8080/api/tickets'
     : 'https://smart-support-dashboard.onrender.com/api/tickets';

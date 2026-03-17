@@ -27,7 +27,32 @@ public class TicketController {
         this.ticketService = ticketService;
     }
 
-    // ... (keep current methods)
+    @PostMapping
+    public ResponseEntity<TicketResponseDTO> createTicket(@Valid @RequestBody TicketRequestDTO ticketDTO) {
+        return new ResponseEntity<>(ticketService.createTicket(ticketDTO), HttpStatus.CREATED);
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<TicketResponseDTO>> getAllTickets(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return ResponseEntity.ok(ticketService.getAllTickets(pageable));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<TicketResponseDTO> getTicketById(@PathVariable Long id) {
+        return ticketService.getTicketById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PatchMapping("/{id}/resolve")
+    public ResponseEntity<TicketResponseDTO> resolveTicket(@PathVariable Long id) {
+        return ticketService.resolveTicket(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
     // NUEVO: Endpoint para eliminar un ticket
     @PreAuthorize("hasRole('ADMIN')")

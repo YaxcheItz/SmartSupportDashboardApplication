@@ -12,9 +12,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
   // Interceptar todo lo que vaya a /api
-  if (req.url.includes('/api/') && token) {
+  if (req.url.includes('/api/') && token && token.trim() !== '') {
     const cloned = req.clone({
-      headers: req.headers.set('Authorization', `Bearer ${token}`)
+      setHeaders: {
+        Authorization: `Bearer ${token}`
+      }
     });
     return next(cloned);
   }
