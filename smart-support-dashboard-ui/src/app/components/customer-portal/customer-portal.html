@@ -10,15 +10,15 @@
   </header>
 
   <main class="tickets-grid">
-    <div *ngIf="isLoading" class="loader">Cargando tus solicitudes...</div>
+    <div *ngIf="isLoading()" class="loader">Cargando tus solicitudes...</div>
 
-    <div *ngIf="!isLoading && tickets.length === 0" class="empty-state">
+    <div *ngIf="!isLoading() && tickets().length === 0" class="empty-state">
       <div class="empty-icon">📂</div>
       <h3>No tienes tickets activos</h3>
       <p>Si tienes algún problema, crea un ticket y nuestro equipo te ayudará pronto.</p>
     </div>
 
-    <div class="ticket-table-wrapper" *ngIf="!isLoading && tickets.length > 0">
+    <div class="ticket-table-wrapper" *ngIf="!isLoading() && tickets().length > 0">
       <table class="ticket-table">
         <thead>
           <tr>
@@ -30,7 +30,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let ticket of tickets">
+          <tr *ngFor="let ticket of tickets()">
             <td>#{{ ticket.id }}</td>
             <td class="ticket-title">{{ ticket.title }}</td>
             <td>{{ ticket.createdAt | date:'short' }}</td>

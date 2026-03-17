@@ -20,8 +20,18 @@
       </div>
     </header>
 
+    <!-- TABS DE ESTADO -->
+    <div class="dashboard-tabs" *ngIf="isStaff()">
+      <button class="tab-btn" [class.active]="currentTab() === 'ACTIVOS'" (click)="setTab('ACTIVOS')">
+        📥 Tickets Activos
+      </button>
+      <button class="tab-btn" [class.active]="currentTab() === 'RESUELTOS'" (click)="setTab('RESUELTOS')">
+        ✅ Tickets Resueltos
+      </button>
+    </div>
+
     <!-- BARRA DE FILTROS AVANZADOS -->
-    <section class="filters-bar" *ngIf="isAdmin()">
+    <section class="filters-bar" *ngIf="isStaff()">
       <div class="filter-group search">
         <label>Buscar por título</label>
         <div class="input-with-icon">
@@ -34,7 +44,7 @@
       <div class="filter-group">
         <label>Estado</label>
         <select [(ngModel)]="filterValues.status" (change)="onFilterChange()">
-          <option value="">Todos los estados</option>
+          <option value="">Default (Pestaña)</option>
           <option value="ABIERTO">Abierto</option>
           <option value="EN_PROGRESO">En Progreso</option>
           <option value="RESUELTO">Resuelto</option>
@@ -42,7 +52,7 @@
         </select>
       </div>
 
-      <div class="filter-group">
+      <div class="filter-group" *ngIf="isAdmin()">
         <label>Prioridad IA</label>
         <select [(ngModel)]="filterValues.priority" (change)="onFilterChange()">
           <option value="">Todas las prioridades</option>
@@ -53,7 +63,7 @@
         </select>
       </div>
 
-      <div class="filter-group">
+      <div class="filter-group" *ngIf="isAdmin()">
         <label>Categoría IA</label>
         <select [(ngModel)]="filterValues.category" (change)="onFilterChange()">
           <option value="">Todas las categorías</option>
@@ -81,7 +91,7 @@
     <div *ngIf="!isLoading() && !isWakingUp() && tickets().length === 0" class="empty-state">
       <span class="empty-icon">📂</span>
       <h3>No se encontraron tickets</h3>
-      <p>Intenta ajustar los filtros de búsqueda.</p>
+      <p>Intenta ajustar los filtros de búsqueda o cambia de pestaña.</p>
     </div>
 
     <div class="tickets-grid" *ngIf="!isLoading() && !isWakingUp() && tickets().length > 0">
@@ -113,13 +123,25 @@
           </div>
           
           <div class="actions">
+            <!-- Botón Asignar (Solo si no tiene nadie asignado) -->
+            <button *ngIf="!ticket.assignedToUsername && ticket.status === 'ABIERTO'" 
+                    class="btn btn-outline btn-sm" (click)="assignToMe($event, ticket.id)">
+              🙋‍♂️ Atender
+            </button>
+
             <button *ngIf="ticket.status !== 'RESUELTO' && ticket.status !== 'CERRADO'" 
                     class="btn-resolve" (click)="resolveTicket($event, ticket.id)">
               Cerrar Ticket
             </button>
+            
             <span *ngIf="ticket.status === 'RESUELTO' || ticket.status === 'CERRADO'" class="closed-label">
               ✅ Resuelto
             </span>
+
+            <!-- Botón Borrar (Solo Admin) -->
+            <button *ngIf="isAdmin()" class="btn-delete-icon" (click)="deleteTicket($event, ticket.id)" title="Eliminar permanentemente">
+              🗑️
+            </button>
           </div>
         </div>
       </div>

@@ -12,6 +12,7 @@ import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-ticket-list',
+  standalone: true,
   imports: [CommonModule, DashboardStatsComponent, RouterModule, FormsModule],
   templateUrl: './ticket-list.html',
   styleUrl: './ticket-list.css',
@@ -21,6 +22,9 @@ export class TicketList implements OnInit, OnDestroy {
   isLoading = signal<boolean>(true);
   isWakingUp = signal<boolean>(false);
   
+  // Tabs: 'ACTIVOS' | 'RESUELTOS'
+  currentTab = signal<string>('ACTIVOS');
+
   // Filtros Avanzados
   filterValues = {
     title: '',
@@ -41,6 +45,7 @@ export class TicketList implements OnInit, OnDestroy {
   private webSocketService = inject(WebSocketService);
   private wsSubscription?: Subscription;
 
+  isStaff = computed(() => this.authService.isStaff());
   isAdmin = computed(() => this.authService.isAdmin());
 
   ngOnInit(): void {
@@ -65,8 +70,8 @@ export class TicketList implements OnInit, OnDestroy {
           }
           return newList;
         } else {
-          // Si el ticket NO existe, es uno NUEVO (Notificamos al Admin)
-          if (this.isAdmin()) {
+          // Si el ticket NO existe, es uno NUEVO (Notificamos al Admin/Empleado)
+          if (this.isStaff()) {
             this.toastService.showSuccess(`🔔 Nuevo ticket recibido: "${updatedTicket.title}"`);
             // Añadir al inicio de la lista
             return [updatedTicket, ...currentTickets];
@@ -84,6 +89,13 @@ export class TicketList implements OnInit, OnDestroy {
     this.webSocketService.disconnect();
   }
 
+  setTab(tab: string) {
+    this.currentTab.set(tab);
+    // Limpiar filtro de estado al cambiar de pestaña para usar el default de la pestaña
+    this.filterValues.status = ''; 
+    this.loadTickets(0);
+  }
+
   // Método para aplicar filtros con retraso (debounce)
   onFilterChange() {
     if (this.searchTimeout) clearTimeout(this.searchTimeout);
@@ -94,7 +106,16 @@ export class TicketList implements OnInit, OnDestroy {
 
   loadTickets(page: number): void {
     this.isLoading.set(true);
-    this.ticketService.getAllTickets(page, this.pageSize, this.filterValues).subscribe({
+    
+    // Ajuste dinámico de filtro de estado según la pestaña si no hay filtro manual
+    const activeFilters = { ...this.filterValues };
+    if (!activeFilters.status) {
+      // Si estamos en ACTIVOS, mostramos ABIERTO y EN_PROGRESO (el backend maneja strings simples, así que mandamos ABIERTO por ahora o implementamos lógica de "no RESUELTO")
+      // Para simplificar, si la pestaña es ACTIVOS y no hay filtro, pedimos ABIERTO.
+      activeFilters.status = this.currentTab() === 'ACTIVOS' ? 'ABIERTO' : 'RESUELTO';
+    }
+
+    this.ticketService.getAllTickets(page, this.pageSize, activeFilters).subscribe({
       next: (data) => {
         this.tickets.set(data.content || []);
         this.currentPage.set(data.number);
@@ -131,7 +152,13 @@ export class TicketList implements OnInit, OnDestroy {
     if (!id) return;
     this.ticketService.resolveTicket(id).subscribe({
       next: (res) => {
-        this.tickets.update(list => list.map(t => t.id === id ? res : t));
+        // Al resolverlo, si estamos en la pestaña ACTIVOS, lo quitamos de la lista
+        if (this.currentTab() === 'ACTIVOS') {
+          this.tickets.update(list => list.filter(t => t.id !== id));
+        } else {
+          // Si estamos en otra pestaña, lo actualizamos
+          this.tickets.update(list => list.map(t => t.id === id ? res : t));
+        }
         this.toastService.showSuccess('Ticket marcado como resuelto');
       }
     });
