@@ -93,6 +93,14 @@ public class TicketService {
                 .collect(Collectors.groupingBy(Ticket::getAiCategory, Collectors.counting()));
     }
 
+    // NUEVO: Obtener estadísticas por prioridad
+    public Map<String, Long> getPriorityStats() {
+        List<Ticket> allTickets = ticketRepository.findAll();
+        return allTickets.stream()
+                .filter(t -> t.getAiPriority() != null)
+                .collect(Collectors.groupingBy(Ticket::getAiPriority, Collectors.counting()));
+    }
+
     public void deleteTicket(Long id) {
         ticketRepository.deleteById(id);
     }

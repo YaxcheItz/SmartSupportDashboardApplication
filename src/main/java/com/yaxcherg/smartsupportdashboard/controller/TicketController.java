@@ -92,4 +92,10 @@ public class TicketController {
     public ResponseEntity<Map<String, Long>> getCategoryStats() {
         return ResponseEntity.ok(ticketService.getCategoryStats());
     }
+
+    // NUEVO: Obtener estadísticas de prioridades
+    @GetMapping("/stats/priorities")
+    public ResponseEntity<Map<String, Long>> getPriorityStats() {
+        return ResponseEntity.ok(ticketService.getPriorityStats());
+    }
 }
