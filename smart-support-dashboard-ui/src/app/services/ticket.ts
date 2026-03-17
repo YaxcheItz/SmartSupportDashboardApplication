@@ -38,4 +38,9 @@ export class TicketService {
   deleteTicket(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+  // NUEVO: Asignar ticket a un usuario
+  assignTicket(id: number, username: string): Observable<Ticket> {
+    return this.http.patch<Ticket>(`${this.apiUrl}/${id}/assign/${username}`, {});
+  }
 }

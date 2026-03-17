@@ -90,13 +90,23 @@
           </div>
 
           <div class="card-footer">
-            <div class="user">
-              <span class="avatar">{{ ticket.customerEmail.charAt(0).toUpperCase() }}</span>
-              <span class="email">{{ ticket.customerEmail }}</span>
+            <div class="user-info-group">
+              <div class="user">
+                <span class="avatar">{{ ticket.customerEmail.charAt(0).toUpperCase() }}</span>
+                <span class="email">{{ ticket.customerEmail }}</span>
+              </div>
+              @if (ticket.assignedToUsername) {
+                <div class="assigned-badge">
+                  👤 {{ ticket.assignedToUsername }}
+                </div>
+              }
             </div>
             
             <div class="actions">
               @if (ticket.status !== 'CERRADO') {
+                @if (!ticket.assignedToUsername) {
+                  <button class="btn-assign" (click)="assignToMe($event, ticket.id)">Atender</button>
+                }
                 <button class="btn-resolve" (click)="resolveTicket($event, ticket.id)">Cerrar</button>
               } @else {
                 <span class="closed-label">Finalizado</span>

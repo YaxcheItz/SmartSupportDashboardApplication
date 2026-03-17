@@ -35,4 +35,8 @@ public class Ticket {
     // Estado del ticket: ABIERTO, EN_PROGRESO, CERRADO
     @Column(nullable = false)
     private String status = "ABIERTO";
+
+    @ManyToOne
+    @JoinColumn(name = "assigned_to_id")
+    private AppUser assignedTo;
 }

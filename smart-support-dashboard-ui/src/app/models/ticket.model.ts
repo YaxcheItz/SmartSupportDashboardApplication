@@ -9,5 +9,6 @@ export interface Ticket {
   aiSummary?: string;
   createdAt?: string;
   status?: string;
+  assignedToUsername?: string;
 }
 //tengo los mismos campos que en java y los mismos nombres

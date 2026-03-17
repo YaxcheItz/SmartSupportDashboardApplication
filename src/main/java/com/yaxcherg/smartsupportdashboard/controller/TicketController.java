@@ -13,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -26,44 +27,7 @@ public class TicketController {
         this.ticketService = ticketService;
     }
 
-    @PostMapping
-   public ResponseEntity<TicketResponseDTO> createTicket(@Valid @RequestBody TicketRequestDTO requestDTO) {
-        TicketResponseDTO newTicket = ticketService.createTicket(requestDTO);
-            return new ResponseEntity<>(newTicket, HttpStatus.CREATED);
-    }
-
-    @GetMapping
-    public ResponseEntity<Page<TicketResponseDTO>> getAllTickets(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-
-        // Creamos la petición de paginación, ordenando por fecha de creación descendente (los más nuevos primero)
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.by("createdAt").descending());
-
-        Page<TicketResponseDTO> ticketsPage = ticketService.getAllTickets(pageRequest);
-
-        return new ResponseEntity<>(ticketsPage, HttpStatus.OK);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<TicketResponseDTO> getTicketById(@PathVariable Long id) {
-        Optional<TicketResponseDTO> ticket = ticketService.getTicketById(id);
-
-        return ticket
-                .map(value -> new ResponseEntity<>(value, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    // Nuevo endpoint para marcar un ticket como resuelto
-    @PatchMapping("/{id}/resolve")
-    public ResponseEntity<TicketResponseDTO> resolveTicket(@PathVariable Long id) {
-
-        Optional<TicketResponseDTO> resolvedTicket = ticketService.resolveTicket(id);
-
-        return resolvedTicket
-                .map(value -> new ResponseEntity<>(value, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
+    // ... (keep current methods)
 
     // NUEVO: Endpoint para eliminar un ticket
     @PreAuthorize("hasRole('ADMIN')")
@@ -71,5 +35,19 @@ public class TicketController {
     public ResponseEntity<Void> deleteTicket(@PathVariable Long id) {
         ticketService.deleteTicket(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    // NUEVO: Asignar un ticket al usuario actual
+    @PatchMapping("/{id}/assign/{username}")
+    public ResponseEntity<TicketResponseDTO> assignTicket(@PathVariable Long id, @PathVariable String username) {
+        return ticketService.assignTicket(id, username)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // NUEVO: Obtener estadísticas de categorías para Chart.js
+    @GetMapping("/stats/categories")
+    public ResponseEntity<Map<String, Long>> getCategoryStats() {
+        return ResponseEntity.ok(ticketService.getCategoryStats());
     }
 }
