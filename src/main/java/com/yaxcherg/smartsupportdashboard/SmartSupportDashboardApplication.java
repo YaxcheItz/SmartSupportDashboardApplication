@@ -1,12 +1,15 @@
 package com.yaxcherg.smartsupportdashboard;
 
+import com.yaxcherg.smartsupportdashboard.model.AppUser;
 import com.yaxcherg.smartsupportdashboard.model.Ticket;
 import com.yaxcherg.smartsupportdashboard.repository.TicketRepository;
+import com.yaxcherg.smartsupportdashboard.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootApplication
 @EnableAsync
@@ -16,13 +19,35 @@ public class SmartSupportDashboardApplication {
         SpringApplication.run(SmartSupportDashboardApplication.class, args);
     }
 
-    // ¡Añade este método!
-    // Esto se ejecuta automáticamente cuando Java arranca
     @Bean
-    public CommandLineRunner loadData(TicketRepository ticketRepository) {
+    public CommandLineRunner loadData(TicketRepository ticketRepository, 
+                                    UserRepository userRepository, 
+                                    PasswordEncoder passwordEncoder) {
         return (args) -> {
+            // Sembrar Usuarios de Prueba si no hay ninguno
+            if (userRepository.count() == 0) {
+                // Admin
+                AppUser admin = new AppUser("admin", "admin@smart.com", passwordEncoder.encode("admin123"));
+                admin.setRole("ROLE_ADMIN");
+                userRepository.save(admin);
+
+                // Agente
+                AppUser agent = new AppUser("agente", "agente@smart.com", passwordEncoder.encode("agente123"));
+                agent.setRole("ROLE_EMPLOYEE");
+                userRepository.save(agent);
+
+                // Cliente/Usuario común
+                AppUser user = new AppUser("cliente", "cliente@smart.com", passwordEncoder.encode("cliente123"));
+                user.setRole("ROLE_USER");
+                userRepository.save(user);
+
+                System.out.println("✅ Se han insertated 3 usuarios de prueba (admin, agente, cliente).");
+            }
+
             // Si la base de datos está vacía, mete dos tickets de prueba
             if (ticketRepository.count() == 0) {
+                // ... (existing code for tickets)
+
                 Ticket t1 = new Ticket();
                 t1.setTitle("Problema de conexión");
                 t1.setDescription("No puedo entrar a mi cuenta desde ayer.");

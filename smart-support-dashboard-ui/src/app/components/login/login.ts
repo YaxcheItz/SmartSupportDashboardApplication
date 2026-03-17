@@ -61,7 +61,8 @@ export class LoginComponent {
           } else {
             this.router.navigate(['/portal']);
           }
-        },        error: (err) => {
+        },
+        error: (err) => {
           this.isLoading.set(false);
           this.errorMessage.set('Usuario o contraseña incorrectos');
           this.toastService.showError('Fallo en el inicio de sesión');
@@ -69,6 +70,17 @@ export class LoginComponent {
         },
       });
     }
+  }
+
+  quickLogin(role: 'admin' | 'agente' | 'cliente') {
+    const creds = {
+      admin: { u: 'admin', p: 'admin123' },
+      agente: { u: 'agente', p: 'agente123' },
+      cliente: { u: 'cliente', p: 'cliente123' },
+    };
+    const { u, p } = creds[role];
+    this.loginForm.patchValue({ username: u, password: p });
+    this.onLogin();
   }
 
   onRegister() {
