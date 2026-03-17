@@ -32,7 +32,7 @@
 /* TABS DE ESTADO - Rediseño Profesional */
 .dashboard-tabs {
   display: flex;
-  background: #f1f5f9;
+  background: var(--border-color); /* Cambiado de hardcoded #f1f5f9 */
   padding: 4px;
   border-radius: var(--radius-md);
   margin-bottom: 2rem;
@@ -52,8 +52,8 @@
 }
 
 .tab-btn.active {
-  background: white;
-  color: var(--primary-color);
+  background: var(--card-bg); /* Cambiado de white */
+  color: var(--text-color); /* Cambiado de primary */
   box-shadow: var(--shadow-sm);
 }
 
@@ -62,6 +62,7 @@
   padding: 2.5rem 4rem;
   overflow-y: auto;
   box-sizing: border-box;
+  background: var(--bg-color);
 }
 
 .main-header {
@@ -74,7 +75,7 @@
   color: var(--text-color);
 }
 
-/* BARRA DE FILTROS - Diseño más integrado */
+/* BARRA DE FILTROS */
 .filters-bar {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
@@ -107,10 +108,10 @@
 }
 
 .input-with-icon { position: relative; }
-.input-with-icon .icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.4; }
+.input-with-icon .icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.4; color: var(--text-color); }
 .input-with-icon input { padding-left: 2.5rem; width: 100%; box-sizing: border-box; }
 
-/* GRID DE TICKETS - Tarjetas Minimalistas */
+/* GRID DE TICKETS */
 .tickets-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -126,11 +127,11 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  box-shadow: var(--shadow-sm);
 }
 
 .ticket-card:hover {
-  border-color: var(--text-muted);
+  border-color: var(--primary-color);
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
 }
@@ -145,7 +146,7 @@
   font-size: 0.7rem;
   font-weight: 600;
   color: var(--text-muted);
-  background: #f1f5f9;
+  background: var(--bg-color); /* Cambiado de hardcoded */
   padding: 2px 8px;
   border-radius: 4px;
 }
@@ -157,10 +158,10 @@
   letter-spacing: 0.05em;
 }
 
-.prio-urgente { color: #be123c; }
-.prio-alta { color: #b45309; }
-.prio-media { color: #334155; }
-.prio-baja { color: #15803d; }
+.prio-urgente { color: var(--danger-color); }
+.prio-alta { color: var(--warning-color); }
+.prio-media { color: var(--primary-color); }
+.prio-baja { color: var(--success-color); }
 
 .card-content h3 {
   font-size: 1.15rem;
@@ -181,12 +182,12 @@
 }
 
 .ia-insight {
-  background: #f8fafc;
-  border: 1px solid #f1f5f9;
+  background: var(--bg-color); /* Cambiado de hardcoded */
+  border: 1px solid var(--border-color);
   padding: 0.875rem;
   border-radius: var(--radius-md);
   font-size: 0.85rem;
-  color: #475569;
+  color: var(--text-color);
   display: flex;
   gap: 0.75rem;
   margin-bottom: 1.5rem;
@@ -198,15 +199,15 @@
   justify-content: space-between;
   align-items: center;
   padding-top: 1.25rem;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--border-color);
 }
 
 .user-info { display: flex; align-items: center; gap: 0.75rem; }
 .avatar { 
   width: 28px; 
   height: 28px; 
-  background: #334155; 
-  color: white; 
+  background: var(--primary-color); 
+  color: var(--bg-color); 
   border-radius: 50%; 
   display: flex; 
   align-items: center; 
@@ -219,7 +220,7 @@
 .actions { display: flex; gap: 0.5rem; }
 
 .btn-resolve {
-  background: white;
+  background: var(--card-bg);
   border: 1px solid var(--border-color);
   color: var(--text-color);
   padding: 0.4rem 0.8rem;
@@ -231,14 +232,14 @@
 }
 
 .btn-resolve:hover {
-  background: #f8fafc;
+  background: var(--bg-color);
   border-color: var(--text-muted);
 }
 
 .closed-label {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #059669;
+  color: var(--success-color);
 }
 
 .btn-delete-icon {
@@ -248,6 +249,7 @@
   font-size: 1rem;
   opacity: 0.3;
   transition: opacity 0.2s;
+  color: var(--text-color);
 }
 
 .ticket-card:hover .btn-delete-icon { opacity: 0.6; }
@@ -257,8 +259,8 @@
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid #e2e8f0;
-  border-top-color: #334155;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary-color);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -272,6 +274,6 @@
 
 @media (max-width: 900px) {
   .dashboard-layout { grid-template-columns: 1fr; }
-  .sidebar { height: auto; position: static; }
+  .sidebar { height: auto; position: static; border-right: none; border-bottom: 1px solid var(--border-color); }
   .main-content { padding: 2rem; }
 }

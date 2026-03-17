@@ -11,7 +11,7 @@ import { AuthService } from './services/auth';
     <!-- HEADER GLOBAL -->
     <header class="global-header">
       <div class="header-left">
-        <h1 class="logo" routerLink="/dashboard">
+        <h1 class="logo" [routerLink]="authService.isStaff() ? '/dashboard' : '/portal'" style="cursor: pointer;">
           <span class="logo-icon">S</span>
           <span style="color: var(--text-color);">Smart</span><span style="color: var(--primary-color);">Support</span>
         </h1>
@@ -33,6 +33,9 @@ import { AuthService } from './services/auth';
             }
             <a routerLink="/nuevo-ticket" routerLinkActive="active-link" class="nav-link">
               Crear Ticket
+            </a>
+            <a routerLink="/profile" routerLinkActive="active-link" class="nav-link">
+              Perfil
             </a>
           </nav>
         }

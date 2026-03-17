@@ -5,6 +5,7 @@ import { TicketDetailComponent } from './components/ticket-detail/ticket-detail'
 import { LoginComponent } from './components/login/login';
 import { Reports } from './components/reports/reports';
 import { CustomerPortalComponent } from './components/customer-portal/customer-portal';
+import { ProfileComponent } from './components/profile/profile';
 import { authGuard } from './guards/auth-guard';
 
 export const routes: Routes = [
@@ -12,6 +13,7 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'dashboard', component: TicketList, canActivate: [authGuard] },
   { path: 'portal', component: CustomerPortalComponent, canActivate: [authGuard] },
+  { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'ticket/:id', component: TicketDetailComponent, canActivate: [authGuard] },
   { path: 'reportes', component: Reports, canActivate: [authGuard] },
   { path: 'nuevo-ticket', component: TicketForm, canActivate: [authGuard] },
