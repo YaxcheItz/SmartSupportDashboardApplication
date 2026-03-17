@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, ChangeDetectorRef, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -10,6 +10,7 @@ import { TicketService } from '../../services/ticket';
 import { ToastService } from '../../services/toast';
 import { AuthService } from '../../services/auth';
 import { Router } from '@angular/router';
+import { Subject, Subscription, debounceTime, distinctUntilChanged, switchMap, filter, of } from 'rxjs';
 
 @Component({
   selector: 'app-ticket-form',
@@ -18,11 +19,17 @@ import { Router } from '@angular/router';
   templateUrl: './ticket-form.html',
   styleUrls: ['./ticket-form.css'],
 })
-export class TicketForm {
+export class TicketForm implements OnInit, OnDestroy {
   ticketForm: FormGroup;
   isSubmitting = false;
   selectedFile: File | null = null;
   filePreview: string | ArrayBuffer | null = null;
+
+  // IA Prevención
+  quickSolution: string | null = null;
+  isSearchingSolution = false;
+  private titleSubject = new Subject<string>();
+  private titleSubscription?: Subscription;
 
   private fb = inject(FormBuilder);
   private ticketService = inject(TicketService);
@@ -38,6 +45,46 @@ export class TicketForm {
       title: ['', [Validators.required, Validators.minLength(5)]],
       description: ['', [Validators.required, Validators.minLength(15)]],
     });
+  }
+
+  ngOnInit() {
+    // Escuchar cambios en el título
+    this.ticketForm.get('title')?.valueChanges.subscribe(value => {
+      this.quickSolution = null; // Limpiar sugerencia anterior
+      if (value && value.length >= 10) {
+        this.titleSubject.next(value);
+      }
+    });
+
+    // Procesar búsqueda con IA
+    this.titleSubscription = this.titleSubject.pipe(
+      debounceTime(800), // Esperar a que deje de escribir
+      distinctUntilChanged(),
+      filter(title => title.length >= 10),
+      switchMap(title => {
+        this.isSearchingSolution = true;
+        this.cdr.detectChanges();
+        return this.ticketService.getQuickSolution(title);
+      })
+    ).subscribe({
+      next: (res) => {
+        this.isSearchingSolution = false;
+        if (res && res.suggestion) {
+          this.quickSolution = res.suggestion;
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.isSearchingSolution = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.titleSubscription) {
+      this.titleSubscription.unsubscribe();
+    }
   }
 
   onFileSelected(event: any) {

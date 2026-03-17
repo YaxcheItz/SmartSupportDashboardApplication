@@ -74,8 +74,19 @@ public class TicketController {
         return new ResponseEntity<>(commentService.addComment(id, dto, user), HttpStatus.CREATED);
     }
 
+    // --- ENDPOINTS DE INTELIGENCIA ARTIFICIAL ---
+
+    @GetMapping("/prevent")
+    public ResponseEntity<Map<String, String>> preventTicket(@RequestParam String title) {
+        String suggestion = geminiAiService.getQuickSolution(title);
+        if (suggestion != null) {
+            return ResponseEntity.ok(Map.of("suggestion", suggestion));
+        }
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{id}/suggest-response")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     public ResponseEntity<Map<String, String>> suggestResponse(@PathVariable Long id) {
         return ticketService.getTicketById(id).map(ticket -> {
             String suggestion = geminiAiService.generateResponseSuggestion(ticket.getTitle(), ticket.getDescription());

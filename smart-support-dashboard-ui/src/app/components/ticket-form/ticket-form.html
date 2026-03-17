@@ -43,6 +43,18 @@
         <div class="error-msg" *ngIf="ticketForm.get('title')?.invalid && ticketForm.get('title')?.touched">
           El título es obligatorio y debe tener al menos 5 caracteres.
         </div>
+
+        <!-- SUGERENCIA RÁPIDA IA (Prevención de Tickets) -->
+        <div class="ai-quick-solution" *ngIf="isSearchingSolution || quickSolution">
+          <div class="ai-badge">🤖 IA de Soporte</div>
+          <div *ngIf="isSearchingSolution" class="ai-searching">
+            Buscando una solución rápida para ti...
+          </div>
+          <div *ngIf="quickSolution" class="ai-solution-content">
+            <strong>¿Esto resuelve tu problema?</strong>
+            <p>{{ quickSolution }}</p>
+          </div>
+        </div>
       </div>
 
       <!-- CAMPO: DESCRIPCIÓN -->

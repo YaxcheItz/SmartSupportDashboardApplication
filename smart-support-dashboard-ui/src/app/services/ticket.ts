@@ -65,4 +65,9 @@ export class TicketService {
   addComment(ticketId: number, content: string): Observable<Comment> {
     return this.http.post<Comment>(`${this.apiUrl}/${ticketId}/comments`, { content });
   }
+
+  // --- NUEVOS MÉTODOS PARA PREVENCIÓN ---
+  getQuickSolution(title: string): Observable<{ suggestion: string } | null> {
+    return this.http.get<{ suggestion: string }>(`${this.apiUrl}/prevent?title=${encodeURIComponent(title)}`);
+  }
 }

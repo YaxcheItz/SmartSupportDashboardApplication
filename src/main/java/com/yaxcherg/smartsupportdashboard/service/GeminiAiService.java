@@ -46,7 +46,7 @@ public class GeminiAiService {
             String url = apiUrl + "?key=" + apiKey;
 
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setContentType(MediaType.APPLICATION_JSON); 
 
             String prompt = "Eres un agente de soporte técnico experto. Genera una respuesta profesional, amable y concisa para un cliente que reportó este problema:\n" +
                     "Título: " + ticketTitle + "\n" +
@@ -58,12 +58,12 @@ public class GeminiAiService {
                     "4. Máximo 100 palabras.\n" +
                     "Responde SOLO con el texto de la respuesta, sin etiquetas ni metadatos.";
 
-            Map<String, Object> requestBody = new HashMap<>();
-            Map<String, Object> content = new HashMap<>();
+            Map<String, Object> requestBody = new HashMap<>();  
+            Map<String, Object> content = new HashMap<>();      
             Map<String, String> part = new HashMap<>();
             part.put("text", prompt);
             content.put("parts", List.of(part));
-            requestBody.put("contents", List.of(content));
+            requestBody.put("contents", List.of(content));      
 
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
 
@@ -84,9 +84,53 @@ public class GeminiAiService {
         }
     }
 
-    @Async
-    public void analyzeAndSaveTicket(Long ticketId, String ticketDescription) {
+    // NUEVO: Prevención de tickets con sugerencias rápidas
+    public String getQuickSolution(String issueTitle) {
         try {
+            String url = apiUrl + "?key=" + apiKey;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            String prompt = "El usuario está a punto de crear un ticket de soporte con el siguiente asunto: '" + issueTitle + "'. " +
+                    "Tu trabajo es prevenir que cree el ticket dándole la solución de inmediato si es un problema común (ej. olvidar contraseña, limpiar caché, reiniciar router). " +
+                    "Si el título es muy vago o parece un problema complejo que requiere a un humano, responde exactamente con la palabra 'REQUIRES_HUMAN'. " +
+                    "Si puedes darle una solución rápida, responde de forma muy breve (máximo 40 palabras) con la solución directamente. " +
+                    "No uses saludos ni despedidas, ve directo a la solución.";
+
+            Map<String, Object> requestBody = new HashMap<>();
+            Map<String, Object> content = new HashMap<>();
+            Map<String, String> part = new HashMap<>();
+            part.put("text", prompt);
+            content.put("parts", List.of(part));
+            requestBody.put("contents", List.of(content));
+
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
+
+            String response = restTemplate.postForObject(url, requestEntity, String.class);
+            JsonNode rootNode = objectMapper.readTree(response);
+
+            String suggestion = rootNode.path("candidates")
+                    .get(0)
+                    .path("content")
+                    .path("parts")
+                    .get(0)
+                    .path("text")
+                    .asText()
+                    .trim();
+
+            if ("REQUIRES_HUMAN".equalsIgnoreCase(suggestion)) {
+                return null;
+            }
+            return suggestion;
+
+        } catch (Exception e) {
+            return null; // Si falla la IA, simplemente no mostramos sugerencia
+        }
+    }
+
+    @Async
+    public void analyzeAndSaveTicket(Long ticketId, String ticketDescription) {        try {
             String url = apiUrl + "?key=" + apiKey;
 
             HttpHeaders headers = new HttpHeaders();
