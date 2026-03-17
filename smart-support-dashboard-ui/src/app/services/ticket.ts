@@ -12,8 +12,14 @@ export class TicketService {
 
   private http = inject(HttpClient);
 
-  getAllTickets(page: number = 0, size: number = 10): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}?page=${page}&size=${size}`);
+  getAllTickets(page: number = 0, size: number = 10, filters: any = {}): Observable<any> {
+    let params: any = { page, size };
+    if (filters.title) params.title = filters.title;
+    if (filters.status) params.status = filters.status;
+    if (filters.priority) params.priority = filters.priority;
+    if (filters.category) params.category = filters.category;
+    
+    return this.http.get<any>(this.apiUrl, { params });
   }
 
   // NUEVO: Método para enviar un ticket (POST)
@@ -40,5 +46,10 @@ export class TicketService {
   // NUEVO: Asignar ticket a un usuario
   assignTicket(id: number, username: string): Observable<Ticket> {
     return this.http.patch<Ticket>(`${this.apiUrl}/${id}/assign/${username}`, {});
+  }
+
+  // NUEVO: Obtener sugerencia de respuesta de la IA
+  getAISuggestion(id: number): Observable<{ suggestion: string }> {
+    return this.http.get<{ suggestion: string }>(`${this.apiUrl}/${id}/suggest-response`);
   }
 }

@@ -42,6 +42,32 @@
       </div>
     </div>
 
+    <!-- SECCIÓN DE RESPUESTA IA (Solo Admin) -->
+    <div class="content-section ai-response-section" *ngIf="isAdmin">
+      <div class="section-header-ai">
+        <h3 class="section-title ai-reply-title">✨ Sugerencia de Respuesta</h3>
+        <button (click)="generateSuggestion()" class="btn-ai-sparkle" [disabled]="isGeneratingSuggestion()">
+          {{ isGeneratingSuggestion() ? 'Generando...' : 'Generar con IA' }}
+        </button>
+      </div>
+      
+      <div class="ai-suggestion-box" *ngIf="aiSuggestion()">
+        <p>{{ aiSuggestion() }}</p>
+        <button class="btn-copy" (click)="copyToClipboard()">Copiar Respuesta</button>
+      </div>
+
+      <div class="ai-placeholder" *ngIf="!aiSuggestion() && !isGeneratingSuggestion()">
+        Haz clic en "Generar con IA" para obtener una respuesta profesional sugerida.
+      </div>
+      
+      <div class="ai-loading-placeholder" *ngIf="isGeneratingSuggestion()">
+        <div class="typing-indicator">
+          <span></span><span></span><span></span>
+        </div>
+        Analizando ticket y redactando...
+      </div>
+    </div>
+
     <div class="content-section">
       <h3 class="section-title ai-title">Análisis de la IA</h3>
       <div class="content-box ai-summary">

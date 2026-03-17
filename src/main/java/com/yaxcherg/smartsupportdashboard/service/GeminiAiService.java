@@ -41,6 +41,49 @@ public class GeminiAiService {
         this.objectMapper = new ObjectMapper();
     }
 
+    public String generateResponseSuggestion(String ticketTitle, String ticketDescription) {
+        try {
+            String url = apiUrl + "?key=" + apiKey;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            String prompt = "Eres un agente de soporte técnico experto. Genera una respuesta profesional, amable y concisa para un cliente que reportó este problema:\n" +
+                    "Título: " + ticketTitle + "\n" +
+                    "Descripción: " + ticketDescription + "\n\n" +
+                    "Instrucciones:\n" +
+                    "1. Saluda al cliente.\n" +
+                    "2. Proporciona una posible solución o pasos a seguir.\n" +
+                    "3. Mantén un tono empático.\n" +
+                    "4. Máximo 100 palabras.\n" +
+                    "Responde SOLO con el texto de la respuesta, sin etiquetas ni metadatos.";
+
+            Map<String, Object> requestBody = new HashMap<>();
+            Map<String, Object> content = new HashMap<>();
+            Map<String, String> part = new HashMap<>();
+            part.put("text", prompt);
+            content.put("parts", List.of(part));
+            requestBody.put("contents", List.of(content));
+
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
+
+            String response = restTemplate.postForObject(url, requestEntity, String.class);
+            JsonNode rootNode = objectMapper.readTree(response);
+
+            return rootNode.path("candidates")
+                    .get(0)
+                    .path("content")
+                    .path("parts")
+                    .get(0)
+                    .path("text")
+                    .asText()
+                    .trim();
+
+        } catch (Exception e) {
+            return "Lo siento, no pude generar una sugerencia en este momento. Por favor, intenta redactar una respuesta manualmente.";
+        }
+    }
+
     @Async
     public void analyzeAndSaveTicket(Long ticketId, String ticketDescription) {
         try {

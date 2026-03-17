@@ -4,6 +4,7 @@ import com.yaxcherg.smartsupportdashboard.dto.TicketRequestDTO;
 import com.yaxcherg.smartsupportdashboard.dto.TicketResponseDTO;
 import com.yaxcherg.smartsupportdashboard.model.AppUser;
 import com.yaxcherg.smartsupportdashboard.repository.UserRepository;
+import com.yaxcherg.smartsupportdashboard.service.GeminiAiService;
 import com.yaxcherg.smartsupportdashboard.service.TicketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -28,11 +29,22 @@ public class TicketController {
 
     private final TicketService ticketService;
     private final UserRepository userRepository;
+    private final GeminiAiService geminiAiService;
 
     @Autowired
-    public TicketController(TicketService ticketService, UserRepository userRepository) {
+    public TicketController(TicketService ticketService, UserRepository userRepository, GeminiAiService geminiAiService) {
         this.ticketService = ticketService;
         this.userRepository = userRepository;
+        this.geminiAiService = geminiAiService;
+    }
+
+    @GetMapping("/{id}/suggest-response")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> suggestResponse(@PathVariable Long id) {
+        return ticketService.getTicketById(id).map(ticket -> {
+            String suggestion = geminiAiService.generateResponseSuggestion(ticket.getTitle(), ticket.getDescription());
+            return ResponseEntity.ok(Map.of("suggestion", suggestion));
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     private AppUser getCurrentUser() {
@@ -51,10 +63,14 @@ public class TicketController {
     @GetMapping
     public ResponseEntity<Page<TicketResponseDTO>> getAllTickets(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) String category) {
         AppUser user = getCurrentUser();
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        return ResponseEntity.ok(ticketService.getAllTickets(pageable, user));
+        return ResponseEntity.ok(ticketService.getAllTickets(pageable, user, title, status, priority, category));
     }
 
     @GetMapping("/{id}")
