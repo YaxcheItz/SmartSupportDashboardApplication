@@ -4,8 +4,8 @@ import com.yaxcherg.smartsupportdashboard.dto.TicketRequestDTO;
 import com.yaxcherg.smartsupportdashboard.dto.TicketResponseDTO;
 import com.yaxcherg.smartsupportdashboard.model.AppUser;
 import com.yaxcherg.smartsupportdashboard.repository.UserRepository;
-import com.yaxcherg.smartsupportdashboard.service.TicketService;
 import com.yaxcherg.smartsupportdashboard.service.GeminiAiService;
+import com.yaxcherg.smartsupportdashboard.service.TicketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -39,7 +39,7 @@ public class TicketController {
     }
 
     @GetMapping("/{id}/suggest-response")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> suggestResponse(@PathVariable Long id) {
         return ticketService.getTicketById(id).map(ticket -> {
             String suggestion = geminiAiService.generateResponseSuggestion(ticket.getTitle(), ticket.getDescription());
@@ -107,11 +107,5 @@ public class TicketController {
     @GetMapping("/stats/categories")
     public ResponseEntity<Map<String, Long>> getCategoryStats() {
         return ResponseEntity.ok(ticketService.getCategoryStats());
-    }
-
-    // NUEVO: Obtener estadísticas de prioridades
-    @GetMapping("/stats/priorities")
-    public ResponseEntity<Map<String, Long>> getPriorityStats() {
-        return ResponseEntity.ok(ticketService.getPriorityStats());
     }
 }

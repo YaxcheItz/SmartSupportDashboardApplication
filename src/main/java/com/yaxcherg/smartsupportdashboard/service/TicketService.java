@@ -7,7 +7,6 @@ import com.yaxcherg.smartsupportdashboard.model.Ticket;
 import com.yaxcherg.smartsupportdashboard.repository.TicketRepository;
 import com.yaxcherg.smartsupportdashboard.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,15 +26,12 @@ public class TicketService {
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
     private final GeminiAiService geminiAiService;
-    private final SimpMessagingTemplate messagingTemplate;
 
     @Autowired
-    public TicketService(TicketRepository ticketRepository, UserRepository userRepository, 
-                         GeminiAiService geminiAiService, SimpMessagingTemplate messagingTemplate) {
+    public TicketService(TicketRepository ticketRepository, UserRepository userRepository, GeminiAiService geminiAiService) {
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
         this.geminiAiService = geminiAiService;
-        this.messagingTemplate = messagingTemplate;
     }
 
     public TicketResponseDTO createTicket(TicketRequestDTO ticketDTO, AppUser createdBy) {
@@ -45,17 +41,13 @@ public class TicketService {
         ticket.setCustomerEmail(ticketDTO.getCustomerEmail());
         ticket.setStatus("ABIERTO");
         ticket.setCreatedBy(createdBy); // Asignar el creador del ticket
-
+        
         Ticket savedTicket = ticketRepository.save(ticket);
-        TicketResponseDTO responseDTO = mapToResponse(savedTicket);
-
-        // NOTIFICAR AL FRONTEND VIA WEBSOCKETS (Nuevo ticket recibido)
-        messagingTemplate.convertAndSend("/topic/tickets", savedTicket);
-
+        
         // Llamar a la IA de forma asíncrona
         geminiAiService.analyzeAndSaveTicket(savedTicket.getId(), savedTicket.getDescription());
-
-        return responseDTO;
+        
+        return mapToResponse(savedTicket);
     }
 
     public Page<TicketResponseDTO> getAllTickets(Pageable pageable, AppUser user, 
@@ -65,7 +57,7 @@ public class TicketService {
             List<Predicate> predicates = new ArrayList<>();
 
             // 1. Filtrado por rol (Seguridad)
-            if (!user.getRole().equals("ROLE_ADMIN") && !user.getRole().equals("ROLE_EMPLOYEE")) {
+            if (!user.getRole().equals("ROLE_ADMIN")) {
                 predicates.add(cb.equal(root.get("createdBy"), user));
             }
 
@@ -117,14 +109,6 @@ public class TicketService {
         return allTickets.stream()
                 .filter(t -> t.getAiCategory() != null)
                 .collect(Collectors.groupingBy(Ticket::getAiCategory, Collectors.counting()));
-    }
-
-    // NUEVO: Obtener estadísticas por prioridad
-    public Map<String, Long> getPriorityStats() {
-        List<Ticket> allTickets = ticketRepository.findAll();
-        return allTickets.stream()
-                .filter(t -> t.getAiPriority() != null)
-                .collect(Collectors.groupingBy(Ticket::getAiPriority, Collectors.counting()));
     }
 
     public void deleteTicket(Long id) {
