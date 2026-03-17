@@ -47,12 +47,14 @@ public class SmartSupportDashboardApplication {
 
             // Si la base de datos está vacía, mete dos tickets de prueba
             if (ticketRepository.count() == 0) {
-                // ... (existing code for tickets)
+                // Buscamos al usuario 'cliente' para asignarle los tickets
+                AppUser testUser = userRepository.findByUsername("cliente").orElse(null);
 
                 Ticket t1 = new Ticket();
                 t1.setTitle("Problema de conexión");
                 t1.setDescription("No puedo entrar a mi cuenta desde ayer.");
                 t1.setCustomerEmail("cliente@gmail.com");
+                t1.setCreatedBy(testUser); // Relacionar con el usuario
                 t1.setAiCategory("Soporte Técnico");
                 t1.setAiPriority("Alta");
                 t1.setAiTone("Frustrado");
@@ -63,13 +65,14 @@ public class SmartSupportDashboardApplication {
                 t2.setTitle("Duda sobre mi factura");
                 t2.setDescription("¿Por qué me cobraron doble este mes?");
                 t2.setCustomerEmail("cliente@gmail.com");
+                t2.setCreatedBy(testUser); // Relacionar con el usuario
                 t2.setAiCategory("Facturación");
                 t2.setAiPriority("Media");
                 t2.setAiTone("Preocupado");
                 t2.setAiSummary("Consulta sobre cobro duplicado");
                 ticketRepository.save(t2);
 
-                System.out.println("✅ Se han insertado 2 tickets de prueba en H2.");
+                System.out.println("✅ Se han insertado 2 tickets de prueba relacionados al usuario cliente.");
             }
         };
     }
