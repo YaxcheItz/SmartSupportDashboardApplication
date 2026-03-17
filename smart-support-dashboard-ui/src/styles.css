@@ -116,6 +116,11 @@ h1, h2, h3, h4, h5, h6 {
 .btn-primary { background: var(--primary-color); color: var(--bg-color); }
 .btn-primary:hover { background: var(--primary-hover); }
 
+.btn-sm {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+}
+
 .btn-outline {
   background: transparent;
   border: 1px solid var(--border-color);
