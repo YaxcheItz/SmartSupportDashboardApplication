@@ -17,6 +17,7 @@ export class LoginComponent {
   registerForm: FormGroup;
   isLoading = signal<boolean>(false);
   isLoginMode = signal<boolean>(true);
+  errorMessage = signal<string | null>(null);
 
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
@@ -38,6 +39,7 @@ export class LoginComponent {
 
   toggleMode() {
     this.isLoginMode.set(!this.isLoginMode());
+    this.errorMessage.set(null);
     this.loginForm.reset();
     this.registerForm.reset();
   }
@@ -45,6 +47,7 @@ export class LoginComponent {
   onLogin() {
     if (this.loginForm.valid) {
       this.isLoading.set(true);
+      this.errorMessage.set(null);
       const { username, password } = this.loginForm.value;
 
       this.authService.login(username, password).subscribe({
@@ -55,7 +58,8 @@ export class LoginComponent {
         },
         error: (err) => {
           this.isLoading.set(false);
-          this.toastService.showError('Credenciales incorrectas o error de red');
+          this.errorMessage.set('Usuario o contraseña incorrectos');
+          this.toastService.showError('Fallo en el inicio de sesión');
           console.error(err);
         },
       });
@@ -65,6 +69,7 @@ export class LoginComponent {
   onRegister() {
     if (this.registerForm.valid) {
       this.isLoading.set(true);
+      this.errorMessage.set(null);
       const { username, email, password } = this.registerForm.value;
 
       this.authService.register(username, email, password).subscribe({
@@ -75,7 +80,14 @@ export class LoginComponent {
         },
         error: (err) => {
           this.isLoading.set(false);
-          this.toastService.showError('Error en el registro');
+          let msg = 'Error en el registro';
+          if (err.error && err.error.message) {
+            if (err.error.message.includes('Username')) msg = 'El nombre de usuario ya está en uso';
+            else if (err.error.message.includes('Email')) msg = 'El correo electrónico ya está en uso';
+            else msg = err.error.message;
+          }
+          this.errorMessage.set(msg);
+          this.toastService.showError(msg);
           console.error(err);
         },
       });

@@ -25,6 +25,12 @@
           </div>
         </div>
 
+        @if (errorMessage()) {
+          <div class="error-feedback" style="background: rgba(239, 68, 68, 0.1); color: var(--danger-color); padding: 0.75rem; border-radius: var(--radius-md); font-size: 0.85rem; margin-bottom: 1rem; border: 1px solid rgba(239, 68, 68, 0.2); text-align: center;">
+            ⚠️ {{ errorMessage() }}
+          </div>
+        }
+
         <button type="submit" class="submit-btn" [disabled]="loginForm.invalid || isLoading()">
           @if (!isLoading()) {
             <span class="btn-content">Ingresar al Sistema <span class="btn-icon">→</span></span>
@@ -58,6 +64,12 @@
             <input id="passwordReg" type="password" formControlName="password" placeholder="••••••••">
           </div>
         </div>
+
+        @if (errorMessage()) {
+          <div class="error-feedback" style="background: rgba(239, 68, 68, 0.1); color: var(--danger-color); padding: 0.75rem; border-radius: var(--radius-md); font-size: 0.85rem; margin-bottom: 1rem; border: 1px solid rgba(239, 68, 68, 0.2); text-align: center;">
+            ⚠️ {{ errorMessage() }}
+          </div>
+        }
 
         <button type="submit" class="submit-btn" [disabled]="registerForm.invalid || isLoading()">
           @if (!isLoading()) {

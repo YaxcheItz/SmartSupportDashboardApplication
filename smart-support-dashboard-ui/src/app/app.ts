@@ -22,6 +22,9 @@ import { AuthService } from './services/auth';
             <a routerLink="/dashboard" routerLinkActive="active-link" class="nav-link">
               Dashboard
             </a>
+            <a routerLink="/reportes" routerLinkActive="active-link" class="nav-link">
+              Reportes
+            </a>
             <a routerLink="/nuevo-ticket" routerLinkActive="active-link" class="nav-link">
               Crear Ticket
             </a>
