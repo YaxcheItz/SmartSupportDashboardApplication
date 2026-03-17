@@ -29,8 +29,10 @@ export class WebSocketService {
         return new SockJS(`${baseUrl}/ws-tickets`);
       },
       // Si estamos en HTTPS, construimos la URL wss:// basada en el API
+      // IMPORTANTE: Al usar WebSockets nativos con un servidor que tiene .withSockJS(), 
+      // la URL debe terminar en /websocket
       brokerURL: isSecure
-        ? environment.apiUrl.replace('https://', 'wss://').replace('/api', '/ws-tickets')
+        ? environment.apiUrl.replace('https://', 'wss://').replace('/api', '/ws-tickets/websocket')
         : undefined,
       debug: (str) => {
         // Descomenta esto para ver los logs de WebSocket si falla algo
