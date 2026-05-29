@@ -47,11 +47,9 @@ jobs:
     - name: Build with Maven
       run: mvn -B package --file pom.xml
       env:
-        SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/smart_support
-        SPRING_DATASOURCE_USERNAME: user
-        SPRING_DATASOURCE_PASSWORD: password
         SPRING_DATA_REDIS_HOST: localhost
         SPRING_DATA_REDIS_PORT: 6379
+        JWT_SECRET: super_secret_github_actions_key_1234567890
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
