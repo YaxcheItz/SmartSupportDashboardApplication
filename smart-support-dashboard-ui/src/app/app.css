@@ -1,35 +1,35 @@
 .navbar {
-  background-color: #1976d2;
-  color: white;
-  padding: 15px 30px;
+  background-color: white;
+  color: var(--text-color);
+  padding: 0.75rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .nav-brand {
-  font-size: 1.5rem;
-  font-weight: bold;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-color);
 }
 
 .nav-links a {
-  color: #bbdefb;
+  color: var(--text-muted);
   text-decoration: none;
-  margin-left: 20px;
+  margin-left: 1.5rem;
   font-weight: 500;
-  transition: color 0.3s;
+  font-size: 0.875rem;
+  transition: var(--transition);
 }
 
 .nav-links a:hover {
-  color: white;
+  color: var(--primary-color);
 }
 
-/* La clase que Angular añade automáticamente al link de la página actual */
 .nav-links a.active-link {
-  color: white;
-  border-bottom: 2px solid white;
-  padding-bottom: 5px;
+  color: var(--primary-color);
+  font-weight: 600;
 }
 
 .main-content {

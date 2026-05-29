@@ -7,6 +7,8 @@ import com.yaxcherg.smartsupportdashboard.model.Ticket;
 import com.yaxcherg.smartsupportdashboard.repository.TicketRepository;
 import com.yaxcherg.smartsupportdashboard.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,6 +39,7 @@ public class TicketService {
         this.emailService = emailService;
     }
 
+    @CacheEvict(value = "categoryStats", allEntries = true)
     public TicketResponseDTO createTicket(TicketRequestDTO ticketDTO, AppUser createdBy) {
         Ticket ticket = new Ticket();
         ticket.setTitle(ticketDTO.getTitle());
@@ -89,6 +92,7 @@ public class TicketService {
         return ticketRepository.findById(id).map(this::mapToResponse);
     }
 
+    @CacheEvict(value = "categoryStats", allEntries = true)
     public Optional<TicketResponseDTO> resolveTicket(Long id) {
         return ticketRepository.findById(id).map(ticket -> {
             ticket.setStatus("RESUELTO");
@@ -102,6 +106,7 @@ public class TicketService {
     }
 
     // NUEVO: Método para asignar un ticket a un agente
+    @CacheEvict(value = "categoryStats", allEntries = true)
     public Optional<TicketResponseDTO> assignTicket(Long ticketId, String username) {
         return ticketRepository.findById(ticketId).flatMap(ticket -> 
             userRepository.findByUsername(username).map(user -> {
@@ -112,14 +117,18 @@ public class TicketService {
         );
     }
 
-    // NUEVO: Obtener estadísticas por categoría para las gráficas
+    // OPTIMIZADO: Obtener estadísticas por categoría directamente desde la DB con Caché
+    @Cacheable(value = "categoryStats")
     public Map<String, Long> getCategoryStats() {
-        List<Ticket> allTickets = ticketRepository.findAll();
-        return allTickets.stream()
-                .filter(t -> t.getAiCategory() != null)
-                .collect(Collectors.groupingBy(Ticket::getAiCategory, Collectors.counting()));
+        List<Object[]> results = ticketRepository.countTicketsByCategory();
+        Map<String, Long> stats = new HashMap<>();
+        for (Object[] result : results) {
+            stats.put((String) result[0], (Long) result[1]);
+        }
+        return stats;
     }
 
+    @CacheEvict(value = "categoryStats", allEntries = true)
     public void deleteTicket(Long id) {
         ticketRepository.deleteById(id);
     }

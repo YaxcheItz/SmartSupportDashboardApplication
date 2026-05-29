@@ -30,5 +30,21 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
-    // Aquí podrías agregar más métodos @ExceptionHandler en el futuro para otros tipos de errores
-}
+    // Manejador global para cualquier otra excepción no controlada
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, String>> handleAllExceptions(Exception ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "Ocurrió un error inesperado en el servidor");
+        error.put("message", ex.getMessage()); // En producción podrías querer ocultar el mensaje real
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    // Manejador para RuntimeException (usado en AuthService para errores de validación de negocio)
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "Error de negocio");
+        error.put("message", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+    }

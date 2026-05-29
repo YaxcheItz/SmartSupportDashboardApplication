@@ -1,11 +1,10 @@
 package com.yaxcherg.smartsupportdashboard.controller;
 
 import com.yaxcherg.smartsupportdashboard.model.AppUser;
-import com.yaxcherg.smartsupportdashboard.repository.UserRepository;
+import com.yaxcherg.smartsupportdashboard.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -15,15 +14,12 @@ import java.util.Map;
 public class UserController {
 
     @Autowired
-    UserRepository userRepository;
-
-    @Autowired
-    PasswordEncoder encoder;
+    private UserService userService;
 
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        AppUser user = userRepository.findByUsername(username)
+        AppUser user = userService.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Error: Usuario no encontrado."));
         return ResponseEntity.ok(Map.of(
                 "id", user.getId(),
@@ -37,22 +33,10 @@ public class UserController {
     @PutMapping("/me")
     public ResponseEntity<?> updateProfile(@RequestBody Map<String, String> data) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        AppUser user = userRepository.findByUsername(username)
+        AppUser user = userService.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Error: Usuario no encontrado."));
 
-        if (data.containsKey("email")) {
-            user.setEmail(data.get("email"));
-        }
-
-        if (data.containsKey("avatarUrl")) {
-            user.setAvatarUrl(data.get("avatarUrl"));
-        }
-
-        if (data.containsKey("password") && !data.get("password").isBlank()) {
-            user.setPassword(encoder.encode(data.get("password")));
-        }
-
-        userRepository.save(user);
+        userService.updateProfile(user, data);
         return ResponseEntity.ok(Map.of("message", "Perfil actualizado con éxito"));
     }
 }

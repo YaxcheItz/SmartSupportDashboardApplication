@@ -64,6 +64,12 @@ export class WebSocketService {
   // Llamar a este método cuando el usuario inicie sesión o el dashboard cargue
   connect() {
     if (!this.client.active) {
+      const token = this.authService.getToken();
+      if (token) {
+        this.client.connectHeaders = {
+          'Authorization': `Bearer ${token}`
+        };
+      }
       this.client.activate();
     }
   }
