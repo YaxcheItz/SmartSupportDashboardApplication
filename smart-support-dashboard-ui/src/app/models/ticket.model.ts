@@ -8,6 +8,8 @@ export interface Ticket {
   aiTone?: string;
   aiSummary?: string;
   attachmentUrl?: string;
+  attachmentUrls?: string[];
+  attachmentFileNames?: string[];
   createdAt?: string;
   status?: string;
   assignedToUsername?: string;
