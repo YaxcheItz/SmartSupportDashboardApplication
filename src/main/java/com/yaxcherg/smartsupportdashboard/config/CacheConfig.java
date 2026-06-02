@@ -14,7 +14,7 @@ import java.time.Duration;
 @Configuration
 public class CacheConfig {
 
-    // Intenta usar Redis como caché principal
+    // Intenta usar Redis como caché principal, si falla usa memoria
     @Bean
     @Primary
     public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
