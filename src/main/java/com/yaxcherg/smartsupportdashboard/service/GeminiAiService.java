@@ -35,17 +35,20 @@ public class GeminiAiService {
     private final SimpMessagingTemplate messagingTemplate;
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
+    private final TicketService ticketService;
 
     @Autowired
     public GeminiAiService(TicketRepository ticketRepository, 
                           FaqRepository faqRepository, 
                           SimpMessagingTemplate messagingTemplate,
-                          org.springframework.web.client.RestClient.Builder restClientBuilder) {
+                          RestClient.Builder restClientBuilder,
+                          @org.springframework.context.annotation.Lazy TicketService ticketService) {
         this.ticketRepository = ticketRepository;
         this.faqRepository = faqRepository;
         this.messagingTemplate = messagingTemplate;
         this.restClient = restClientBuilder.build();
         this.objectMapper = new ObjectMapper();
+        this.ticketService = ticketService;
     }
 
     public String generateResponseSuggestion(String ticketTitle, String ticketDescription) {
@@ -109,12 +112,15 @@ public class GeminiAiService {
                 ticket.setAiTone(aiJson.path("tone").asText("Neutral"));
                 ticket.setAiSummary(aiJson.path("summary").asText("Sin resumen"));
                 Ticket savedTicket = ticketRepository.save(ticket);
-                messagingTemplate.convertAndSend("/topic/tickets", savedTicket);
+                
+                // NOTIFICAR AL FRONTEND VIA WEBSOCKETS USANDO DTO
+                messagingTemplate.convertAndSend("/topic/tickets", ticketService.mapToResponse(savedTicket));
             });
         } catch (Exception e) {
             ticketRepository.findById(ticketId).ifPresent(ticket -> {
                 ticket.setAiCategory("Error");
-                ticketRepository.save(ticket);
+                Ticket savedTicket = ticketRepository.save(ticket);
+                messagingTemplate.convertAndSend("/topic/tickets", ticketService.mapToResponse(savedTicket));
             });
         }
     }

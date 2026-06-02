@@ -12,8 +12,10 @@ import com.yaxcherg.smartsupportdashboard.model.enums.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,12 +23,17 @@ public class CommentService {
 
     private final CommentRepository commentRepository;
     private final TicketRepository ticketRepository;
+    private final TicketService ticketService;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Autowired
-    public CommentService(CommentRepository commentRepository, TicketRepository ticketRepository, SimpMessagingTemplate messagingTemplate) {
+    public CommentService(CommentRepository commentRepository, 
+                          TicketRepository ticketRepository, 
+                          TicketService ticketService,
+                          SimpMessagingTemplate messagingTemplate) {
         this.commentRepository = commentRepository;
         this.ticketRepository = ticketRepository;
+        this.ticketService = ticketService;
         this.messagingTemplate = messagingTemplate;
     }
 
@@ -37,16 +44,15 @@ public class CommentService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public CommentResponseDTO addComment(Long ticketId, CommentRequestDTO dto, AppUser author) {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket no encontrado"));
 
         // Lógica de cambio de estado automático
         if (author.getRole() == UserRole.ROLE_ADMIN || author.getRole() == UserRole.ROLE_EMPLOYEE) {
-            // Si responde soporte, marcamos como RESUELTO
             ticket.setStatus(TicketStatus.RESUELTO);
         } else {
-            // Si responde el cliente y estaba cerrado/resuelto, lo reabrimos
             if (ticket.getStatus() == TicketStatus.RESUELTO || ticket.getStatus() == TicketStatus.CERRADO) {
                 ticket.setStatus(TicketStatus.ABIERTO);
             }
@@ -60,8 +66,9 @@ public class CommentService {
 
         TicketComment savedComment = commentRepository.save(comment);
         
-        // Notificar al frontend que el ticket ha cambiado (por el estado)
-        messagingTemplate.convertAndSend("/topic/tickets", ticket);
+        // Notificar al frontend que el ticket ha cambiado.
+        // Enviamos el DTO completo pero mapeado de forma segura
+        messagingTemplate.convertAndSend("/topic/tickets", ticketService.mapToResponse(ticket));
         
         return mapToResponse(savedComment);
     }

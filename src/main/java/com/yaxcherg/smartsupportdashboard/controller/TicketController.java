@@ -86,7 +86,7 @@ public class TicketController {
     }
 
     @GetMapping("/{id}/suggest-response")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     public ResponseEntity<Map<String, String>> suggestResponse(@PathVariable Long id) {
         return ticketService.getTicketById(id).map(ticket -> {
             String suggestion = geminiAiService.generateResponseSuggestion(ticket.getTitle(), ticket.getDescription());

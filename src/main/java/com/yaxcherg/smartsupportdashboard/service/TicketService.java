@@ -145,7 +145,7 @@ public class TicketService {
         ticketRepository.deleteById(id);
     }
 
-    private TicketResponseDTO mapToResponse(Ticket ticket) {
+    public TicketResponseDTO mapToResponse(Ticket ticket) {
         TicketResponseDTO dto = new TicketResponseDTO();
         dto.setId(ticket.getId());
         dto.setTitle(ticket.getTitle());
