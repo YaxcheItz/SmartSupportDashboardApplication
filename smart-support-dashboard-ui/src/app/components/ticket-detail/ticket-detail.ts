@@ -1,10 +1,12 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 import { TicketService } from '../../services/ticket';
 import { AuthService } from '../../services/auth';
 import { ToastService } from '../../services/toast';
+import { WebSocketService } from '../../services/websocket';
 import { Ticket } from '../../models/ticket.model';
 import { Comment } from '../../models/comment.model';
 
@@ -15,7 +17,7 @@ import { Comment } from '../../models/comment.model';
   templateUrl: './ticket-detail.html',
   styleUrls: ['./ticket-detail.css']
 })
-export class TicketDetailComponent implements OnInit {
+export class TicketDetailComponent implements OnInit, OnDestroy {
 
   ticket = signal<Ticket | null>(null);
   loading = signal<boolean>(true);
@@ -29,13 +31,19 @@ export class TicketDetailComponent implements OnInit {
   comments = signal<Comment[]>([]);
   commentForm: FormGroup;
   isSubmittingComment = signal<boolean>(false);
+  
+  typingUser = signal<string | null>(null);
 
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private ticketService = inject(TicketService);
   private toastService = inject(ToastService);
+  private wsService = inject(WebSocketService);
   private fb = inject(FormBuilder);
   authService = inject(AuthService);
+  
+  private subs: Subscription = new Subscription();
+  private typingTimeout: any;
 
   constructor() {
     this.commentForm = this.fb.group({
@@ -46,10 +54,50 @@ export class TicketDetailComponent implements OnInit {
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam) {
-      this.loadTicketDetails(Number(idParam));
-      this.loadComments(Number(idParam));
+      const ticketId = Number(idParam);
+      this.loadTicketDetails(ticketId);
+      this.loadComments(ticketId);
+      
+      // Suscribirse a los indicadores de escritura
+      this.wsService.subscribeToTypingIndicators(ticketId);
+      this.subs.add(
+        this.wsService.typingIndicator$.subscribe(indicator => {
+          if (indicator.ticketId === ticketId && indicator.username !== this.currentUser?.username) {
+            if (indicator.isTyping) {
+              this.typingUser.set(indicator.username);
+              // Si el otro usuario deja de escribir y no manda evento falso por algún error,
+              // lo limpiamos en 3 segundos automáticamente.
+              clearTimeout(this.typingTimeout);
+              this.typingTimeout = setTimeout(() => this.typingUser.set(null), 3000);
+            } else {
+              this.typingUser.set(null);
+            }
+          }
+        })
+      );
+
+      // Detectar cuando el usuario actual escribe
+      this.subs.add(
+        this.commentForm.get('content')?.valueChanges.pipe(
+          distinctUntilChanged()
+        ).subscribe(value => {
+           if (this.currentUser) {
+              const isTyping = value.length > 0;
+              this.wsService.sendTypingIndicator(ticketId, this.currentUser.username, isTyping);
+           }
+        })
+      );
+      
     } else {
       this.goBack();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.subs.unsubscribe();
+    const t = this.ticket();
+    if (t && t.id) {
+       this.wsService.unsubscribeFromTypingIndicators(t.id);
     }
   }
 

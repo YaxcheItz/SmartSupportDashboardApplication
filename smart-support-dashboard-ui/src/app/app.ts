@@ -1,8 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterOutlet, RouterModule } from '@angular/router';
 import { Toast } from './components/toast/toast';
 import { ThemeService } from './services/theme';
 import { AuthService } from './services/auth';
+import { WebSocketService } from './services/websocket';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -209,11 +210,19 @@ import { CommonModule } from '@angular/common';
     }
   `]
 })
-export class App {
+export class App implements OnInit {
   themeService = inject(ThemeService);
   authService = inject(AuthService);
+  wsService = inject(WebSocketService);
+
+  ngOnInit() {
+    if (this.authService.isLoggedIn()) {
+      this.wsService.connect();
+    }
+  }
 
   logout() {
+    this.wsService.disconnect();
     this.authService.logout();
     window.location.href = '/login';
   }

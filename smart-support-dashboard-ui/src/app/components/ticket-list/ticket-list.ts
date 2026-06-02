@@ -110,9 +110,14 @@ export class TicketList implements OnInit, OnDestroy {
     // Ajuste dinámico de filtro de estado según la pestaña si no hay filtro manual
     const activeFilters = { ...this.filterValues };
     if (!activeFilters.status) {
-      // Si estamos en ACTIVOS, mostramos ABIERTO y EN_PROGRESO (el backend maneja strings simples, así que mandamos ABIERTO por ahora o implementamos lógica de "no RESUELTO")
-      // Para simplificar, si la pestaña es ACTIVOS y no hay filtro, pedimos ABIERTO.
-      activeFilters.status = this.currentTab() === 'ACTIVOS' ? 'ABIERTO' : 'RESUELTO';
+      if (this.currentTab() === 'ACTIVOS') {
+        // IMPORTANTE: Si estamos en ACTIVOS, no mandamos status específico para que el 
+        // backend devuelva todos los que no estén RESUELTOS o cerrados.
+        // O mejor aún, mandamos un valor vacío para que traiga "todos" y filtramos aquí o en el backend.
+        activeFilters.status = ''; // Traer todos los activos
+      } else {
+        activeFilters.status = 'RESUELTO';
+      }
     }
 
     this.ticketService.getAllTickets(page, this.pageSize, activeFilters).subscribe({
