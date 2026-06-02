@@ -76,8 +76,13 @@ public class SupabaseStorageService {
         try {
             ResponseEntity<Map> response = restTemplate.exchange(endpoint, HttpMethod.POST, requestEntity, Map.class);
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                // Supabase devuelve {"signedURL": "/storage/v1/object/sign/..."}
+                // Supabase devuelve {"signedURL": "/object/sign/..."}
                 String partialUrl = (String) response.getBody().get("signedURL");
+                
+                // IMPORTANTE: Si la URL parcial no trae el prefijo /storage/v1, hay que añadirlo
+                if (!partialUrl.startsWith("/storage/v1")) {
+                    return supabaseUrl + "/storage/v1" + partialUrl;
+                }
                 return supabaseUrl + partialUrl;
             }
         } catch (Exception e) {

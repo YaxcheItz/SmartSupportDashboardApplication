@@ -25,6 +25,8 @@ export class WebSocketService {
   
   private authService = inject(AuthService);
   private currentSubscriptions: Map<string, StompSubscription> = new Map();
+  private isConnected = false;
+  private pendingSubscriptions: (() => void)[] = [];
 
   constructor() {
     const isSecure = window.location.protocol === 'https:';
@@ -44,6 +46,7 @@ export class WebSocketService {
 
     this.client.onConnect = (frame) => {
       console.log('¡Conectado a WebSockets!', frame);
+      this.isConnected = true;
       
       this.client.subscribe('/topic/tickets', (message: Message) => {
         if (message.body) {
@@ -51,10 +54,19 @@ export class WebSocketService {
           this.ticketUpdatesSource.next(updatedTicket);
         }
       });
+
+      // Ejecutar suscripciones que estaban esperando a que el túnel se abriera
+      this.pendingSubscriptions.forEach(subFn => subFn());
+      this.pendingSubscriptions = [];
+    };
+
+    this.client.onDisconnect = () => {
+      this.isConnected = false;
     };
 
     this.client.onStompError = (frame) => {
       console.error('Broker reported error: ' + frame.headers['message']);
+      this.isConnected = false;
     };
   }
 
@@ -74,24 +86,32 @@ export class WebSocketService {
     if (this.client.active) {
       this.client.deactivate();
       this.currentSubscriptions.clear();
+      this.isConnected = false;
     }
   }
 
   // Permite suscribirse a los eventos de escritura de un ticket específico
   subscribeToTypingIndicators(ticketId: number) {
-    if (!this.client.active) return;
-    
     const subKey = `typing-${ticketId}`;
-    if (this.currentSubscriptions.has(subKey)) return; // Ya suscrito
+    if (this.currentSubscriptions.has(subKey)) return;
 
-    const subscription = this.client.subscribe(`/topic/ticket/${ticketId}/typing`, (message: Message) => {
-      if (message.body) {
-        const indicator: TypingIndicator = JSON.parse(message.body);
-        this.typingIndicatorSource.next(indicator);
-      }
-    });
-    
-    this.currentSubscriptions.set(subKey, subscription);
+    const doSubscribe = () => {
+      const subscription = this.client.subscribe(`/topic/ticket/${ticketId}/typing`, (message: Message) => {
+        if (message.body) {
+          const indicator: TypingIndicator = JSON.parse(message.body);
+          this.typingIndicatorSource.next(indicator);
+        }
+      });
+      this.currentSubscriptions.set(subKey, subscription);
+    };
+
+    if (this.isConnected) {
+      doSubscribe();
+    } else {
+      // Guardar en cola si aún no estamos conectados
+      this.pendingSubscriptions.push(doSubscribe);
+      if (!this.client.active) this.connect();
+    }
   }
 
   unsubscribeFromTypingIndicators(ticketId: number) {

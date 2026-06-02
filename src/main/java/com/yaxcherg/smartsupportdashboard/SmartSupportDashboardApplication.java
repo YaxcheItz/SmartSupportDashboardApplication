@@ -6,6 +6,8 @@ import com.yaxcherg.smartsupportdashboard.model.enums.TicketStatus;
 import com.yaxcherg.smartsupportdashboard.model.enums.UserRole;
 import com.yaxcherg.smartsupportdashboard.repository.TicketRepository;
 import com.yaxcherg.smartsupportdashboard.repository.UserRepository;
+import com.yaxcherg.smartsupportdashboard.repository.FaqRepository;
+import com.yaxcherg.smartsupportdashboard.model.Faq;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -28,8 +30,26 @@ public class SmartSupportDashboardApplication {
     @Bean
     public CommandLineRunner loadData(TicketRepository ticketRepository, 
                                     UserRepository userRepository, 
+                                    FaqRepository faqRepository,
                                     PasswordEncoder passwordEncoder) {
         return (args) -> {
+            // Sembrar FAQs si no hay ninguna
+            if (faqRepository.count() == 0) {
+                faqRepository.save(new Faq(
+                    "¿Cómo cambio mi contraseña?", 
+                    "Ve a tu perfil, selecciona 'Editar' y completa el campo de nueva contraseña."
+                ));
+                faqRepository.save(new Faq(
+                    "Problema con el login / Error 400", 
+                    "Asegúrate de que tu contraseña tenga al menos 8 caracteres y que el usuario sea el correcto. Limpia la caché de tu navegador si el problema persiste."
+                ));
+                faqRepository.save(new Faq(
+                    "¿Qué formatos de imagen se aceptan?", 
+                    "Aceptamos JPG, PNG y GIF con un tamaño máximo de 5MB por archivo."
+                ));
+                System.out.println("✅ Se han insertado 3 FAQs de prueba.");
+            }
+
             // Sembrar Usuarios de Prueba si no hay ninguno
             if (userRepository.count() == 0) {
                 // Admin
@@ -48,19 +68,17 @@ public class SmartSupportDashboardApplication {
                 userRepository.save(user);
 
                 System.out.println("✅ Se han insertado 3 usuarios de prueba (admin, agente, cliente).");
-
             }
 
             // Si la base de datos está vacía, mete dos tickets de prueba
             if (ticketRepository.count() == 0) {
-                // Buscamos al usuario 'cliente' para asignarle los tickets
                 AppUser testUser = userRepository.findByUsername("cliente").orElse(null);
 
                 Ticket t1 = new Ticket();
                 t1.setTitle("Problema de conexión");
                 t1.setDescription("No puedo entrar a mi cuenta desde ayer.");
                 t1.setCustomerEmail("cliente@gmail.com");
-                t1.setCreatedBy(testUser); // Relacionar con el usuario
+                t1.setCreatedBy(testUser); 
                 t1.setStatus(TicketStatus.ABIERTO);
                 t1.setAiCategory("Soporte Técnico");
                 t1.setAiPriority("Alta");
@@ -72,7 +90,7 @@ public class SmartSupportDashboardApplication {
                 t2.setTitle("Duda sobre mi factura");
                 t2.setDescription("¿Por qué me cobraron doble este mes?");
                 t2.setCustomerEmail("cliente@gmail.com");
-                t2.setCreatedBy(testUser); // Relacionar con el usuario
+                t2.setCreatedBy(testUser); 
                 t2.setStatus(TicketStatus.ABIERTO);
                 t2.setAiCategory("Facturación");
                 t2.setAiPriority("Media");

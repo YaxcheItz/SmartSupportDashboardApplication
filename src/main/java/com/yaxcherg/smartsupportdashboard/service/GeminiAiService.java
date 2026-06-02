@@ -2,7 +2,9 @@ package com.yaxcherg.smartsupportdashboard.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yaxcherg.smartsupportdashboard.model.Faq;
 import com.yaxcherg.smartsupportdashboard.model.Ticket;
+import com.yaxcherg.smartsupportdashboard.repository.FaqRepository;
 import com.yaxcherg.smartsupportdashboard.repository.TicketRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
@@ -27,146 +30,77 @@ public class GeminiAiService {
     @Value("${gemini.api.url}")
     private String apiUrl;
 
-    @Autowired
-    private TicketRepository ticketRepository;
-
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
-
-    private final RestTemplate restTemplate;
+    private final TicketRepository ticketRepository;
+    private final FaqRepository faqRepository;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final RestClient restClient;
     private final ObjectMapper objectMapper;
 
-    public GeminiAiService() {
-        this.restTemplate = new RestTemplate();
+    @Autowired
+    public GeminiAiService(TicketRepository ticketRepository, 
+                          FaqRepository faqRepository, 
+                          SimpMessagingTemplate messagingTemplate,
+                          org.springframework.web.client.RestClient.Builder restClientBuilder) {
+        this.ticketRepository = ticketRepository;
+        this.faqRepository = faqRepository;
+        this.messagingTemplate = messagingTemplate;
+        this.restClient = restClientBuilder.build();
         this.objectMapper = new ObjectMapper();
     }
 
     public String generateResponseSuggestion(String ticketTitle, String ticketDescription) {
         try {
             String url = apiUrl + "?key=" + apiKey;
-
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON); 
 
-            String prompt = "Eres un agente de soporte técnico experto. Genera una respuesta profesional, amable y concisa para un cliente que reportó este problema:\n" +
+            String prompt = "Eres un agente de soporte técnico experto. Genera una respuesta profesional para un cliente:\n" +
                     "Título: " + ticketTitle + "\n" +
                     "Descripción: " + ticketDescription + "\n\n" +
-                    "Instrucciones:\n" +
-                    "1. Saluda al cliente.\n" +
-                    "2. Proporciona una posible solución o pasos a seguir.\n" +
-                    "3. Mantén un tono empático.\n" +
-                    "4. Máximo 100 palabras.\n" +
-                    "Responde SOLO con el texto de la respuesta, sin etiquetas ni metadatos.";
+                    "Responde SOLO con el texto de la respuesta.";
 
-            Map<String, Object> requestBody = new HashMap<>();  
-            Map<String, Object> content = new HashMap<>();      
-            Map<String, String> part = new HashMap<>();
-            part.put("text", prompt);
-            content.put("parts", List.of(part));
-            requestBody.put("contents", List.of(content));      
-
-            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
-
-            String response = restTemplate.postForObject(url, requestEntity, String.class);
-            JsonNode rootNode = objectMapper.readTree(response);
-
-            return rootNode.path("candidates")
-                    .get(0)
-                    .path("content")
-                    .path("parts")
-                    .get(0)
-                    .path("text")
-                    .asText()
-                    .trim();
-
+            return callGemini(url, headers, prompt);
         } catch (Exception e) {
-            return "Lo siento, no pude generar una sugerencia en este momento. Por favor, intenta redactar una respuesta manualmente.";
+            return "No pude generar una sugerencia en este momento.";
         }
     }
 
-    // NUEVO: Prevención de tickets con sugerencias rápidas
     public String getQuickSolution(String issueTitle) {
         try {
-            String url = apiUrl + "?key=" + apiKey;
+            List<Faq> faqs = faqRepository.findAll();
+            StringBuilder knowledgeBase = new StringBuilder("Base de Conocimiento SSD:\n");
+            for (Faq faq : faqs) {
+                knowledgeBase.append("- P: ").append(faq.getQuestion()).append("\n  R: ").append(faq.getAnswer()).append("\n");
+            }
 
+            String url = apiUrl + "?key=" + apiKey;
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            String prompt = "El usuario está a punto de crear un ticket de soporte con el siguiente asunto: '" + issueTitle + "'. " +
-                    "Tu trabajo es prevenir que cree el ticket dándole la solución de inmediato si es un problema común (ej. olvidar contraseña, limpiar caché, reiniciar router). " +
-                    "Si el título es muy vago o parece un problema complejo que requiere a un humano, responde exactamente con la palabra 'REQUIRES_HUMAN'. " +
-                    "Si puedes darle una solución rápida, responde de forma muy breve (máximo 40 palabras) con la solución directamente. " +
-                    "No uses saludos ni despedidas, ve directo a la solución.";
+            String prompt = "Usando la Base de Conocimiento:\n" + knowledgeBase.toString() + "\n" +
+                    "El usuario pregunta: '" + issueTitle + "'.\n" +
+                    "Si hay solución en la base, dila brevemente. Si no, responde 'REQUIRES_HUMAN'.";
 
-            Map<String, Object> requestBody = new HashMap<>();
-            Map<String, Object> content = new HashMap<>();
-            Map<String, String> part = new HashMap<>();
-            part.put("text", prompt);
-            content.put("parts", List.of(part));
-            requestBody.put("contents", List.of(content));
+            String suggestion = callGemini(url, headers, prompt);
 
-            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
-
-            String response = restTemplate.postForObject(url, requestEntity, String.class);
-            JsonNode rootNode = objectMapper.readTree(response);
-
-            String suggestion = rootNode.path("candidates")
-                    .get(0)
-                    .path("content")
-                    .path("parts")
-                    .get(0)
-                    .path("text")
-                    .asText()
-                    .trim();
-
-            if ("REQUIRES_HUMAN".equalsIgnoreCase(suggestion)) {
-                return null;
-            }
+            if ("REQUIRES_HUMAN".equalsIgnoreCase(suggestion)) return null;
             return suggestion;
-
         } catch (Exception e) {
-            return null; // Si falla la IA, simplemente no mostramos sugerencia
+            return null;
         }
     }
 
     @Async
-    public void analyzeAndSaveTicket(Long ticketId, String ticketDescription) {        try {
+    public void analyzeAndSaveTicket(Long ticketId, String ticketDescription) {
+        try {
             String url = apiUrl + "?key=" + apiKey;
-
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            String prompt = "Eres un asistente experto en soporte técnico. Lee esta descripción de un problema de un cliente: '" + ticketDescription + "'.\n" +
-                    "Tu ÚNICO trabajo es responder con un objeto JSON válido, sin usar bloques de código Markdown, solo el texto JSON plano.\n" +
-                    "Estructura:\n" +
-                    "{\n" +
-                    "  \"category\": \"(Facturación, Soporte Técnico, Ventas, Queja, Spam, Otro)\",\n" +
-                    "  \"priority\": \"(Baja, Media, Alta, Urgente)\",\n" +
-                    "  \"tone\": \"(Enojado, Frustrado, Preocupado, Neutral, Feliz)\",\n" +
-                    "  \"summary\": \"(resumen en máximo 15 palabras)\"\n" +
-                    "}";
+            String prompt = "Analiza este problema: '" + ticketDescription + "'. Responde SOLO JSON plano:\n" +
+                    "{\"category\": \"...\", \"priority\": \"...\", \"tone\": \"...\", \"summary\": \"...\"}";
 
-            Map<String, Object> requestBody = new HashMap<>();
-            Map<String, Object> content = new HashMap<>();
-            Map<String, String> part = new HashMap<>();
-            part.put("text", prompt);
-            content.put("parts", List.of(part));
-            requestBody.put("contents", List.of(content));
-
-            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
-
-            String response = restTemplate.postForObject(url, requestEntity, String.class);
-            JsonNode rootNode = objectMapper.readTree(response);
-
-            String aiResponseRaw = rootNode.path("candidates")
-                    .get(0)
-                    .path("content")
-                    .path("parts")
-                    .get(0)
-                    .path("text")
-                    .asText()
-                    .trim();
-
+            String aiResponseRaw = callGemini(url, headers, prompt);
             JsonNode aiJson = objectMapper.readTree(aiResponseRaw);
             
             ticketRepository.findById(ticketId).ifPresent(ticket -> {
@@ -175,19 +109,32 @@ public class GeminiAiService {
                 ticket.setAiTone(aiJson.path("tone").asText("Neutral"));
                 ticket.setAiSummary(aiJson.path("summary").asText("Sin resumen"));
                 Ticket savedTicket = ticketRepository.save(ticket);
-                
-                // NOTIFICAR AL FRONTEND VIA WEBSOCKETS
                 messagingTemplate.convertAndSend("/topic/tickets", savedTicket);
             });
-
         } catch (Exception e) {
-            System.err.println("Error al contactar con la IA: " + e.getMessage());
             ticketRepository.findById(ticketId).ifPresent(ticket -> {
                 ticket.setAiCategory("Error");
-                ticket.setAiSummary("Error de conexión con IA");
-                Ticket savedTicket = ticketRepository.save(ticket);
-                messagingTemplate.convertAndSend("/topic/tickets", savedTicket);
+                ticketRepository.save(ticket);
             });
         }
+    }
+
+    private String callGemini(String url, HttpHeaders headers, String prompt) throws Exception {
+        Map<String, Object> requestBody = new HashMap<>();  
+        Map<String, Object> content = new HashMap<>();      
+        Map<String, String> part = new HashMap<>();
+        part.put("text", prompt);
+        content.put("parts", List.of(part));
+        requestBody.put("contents", List.of(content));      
+
+        String response = restClient.post()
+                .uri(url)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(requestBody)
+                .retrieve()
+                .body(String.class);
+
+        JsonNode rootNode = objectMapper.readTree(response);
+        return rootNode.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText().trim();
     }
 }
