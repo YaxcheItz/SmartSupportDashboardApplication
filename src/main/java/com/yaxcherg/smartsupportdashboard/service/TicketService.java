@@ -6,6 +6,8 @@ import com.yaxcherg.smartsupportdashboard.model.AppUser;
 import com.yaxcherg.smartsupportdashboard.model.Ticket;
 import com.yaxcherg.smartsupportdashboard.repository.TicketRepository;
 import com.yaxcherg.smartsupportdashboard.repository.UserRepository;
+import com.yaxcherg.smartsupportdashboard.model.enums.TicketStatus;
+import com.yaxcherg.smartsupportdashboard.model.enums.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -29,14 +31,17 @@ public class TicketService {
     private final UserRepository userRepository;
     private final GeminiAiService geminiAiService;
     private final EmailService emailService;
+    private final SupabaseStorageService storageService;
 
     @Autowired
     public TicketService(TicketRepository ticketRepository, UserRepository userRepository, 
-                         GeminiAiService geminiAiService, EmailService emailService) {
+                         GeminiAiService geminiAiService, EmailService emailService,
+                         SupabaseStorageService storageService) {
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
         this.geminiAiService = geminiAiService;
         this.emailService = emailService;
+        this.storageService = storageService;
     }
 
     @CacheEvict(value = "categoryStats", allEntries = true)
@@ -46,7 +51,7 @@ public class TicketService {
         ticket.setDescription(ticketDTO.getDescription());
         ticket.setCustomerEmail(ticketDTO.getCustomerEmail());
         ticket.setAttachmentUrl(ticketDTO.getAttachmentUrl());
-        ticket.setStatus("ABIERTO");
+        ticket.setStatus(TicketStatus.ABIERTO);
         ticket.setCreatedBy(createdBy); // Asignar el creador del ticket
         
         Ticket savedTicket = ticketRepository.save(ticket);
@@ -64,7 +69,7 @@ public class TicketService {
             List<Predicate> predicates = new ArrayList<>();
 
             // 1. Filtrado por rol (Seguridad)
-            if (!user.getRole().equals("ROLE_ADMIN") && !user.getRole().equals("ROLE_EMPLOYEE")) {
+            if (user.getRole() != UserRole.ROLE_ADMIN && user.getRole() != UserRole.ROLE_EMPLOYEE) {
                 predicates.add(cb.equal(root.get("createdBy"), user));
             }
 
@@ -73,7 +78,9 @@ public class TicketService {
                 predicates.add(cb.like(cb.lower(root.get("title")), "%" + title.toLowerCase() + "%"));
             }
             if (status != null && !status.isEmpty()) {
-                predicates.add(cb.equal(root.get("status"), status));
+                try {
+                    predicates.add(cb.equal(root.get("status"), TicketStatus.valueOf(status.toUpperCase())));
+                } catch(IllegalArgumentException e){}
             }
             if (priority != null && !priority.isEmpty()) {
                 predicates.add(cb.equal(root.get("aiPriority"), priority));
@@ -95,7 +102,7 @@ public class TicketService {
     @CacheEvict(value = "categoryStats", allEntries = true)
     public Optional<TicketResponseDTO> resolveTicket(Long id) {
         return ticketRepository.findById(id).map(ticket -> {
-            ticket.setStatus("RESUELTO");
+            ticket.setStatus(TicketStatus.RESUELTO);
             Ticket savedTicket = ticketRepository.save(ticket);
             
             // ENVIAR CORREO DE RESOLUCIÓN AL CLIENTE
@@ -111,7 +118,7 @@ public class TicketService {
         return ticketRepository.findById(ticketId).flatMap(ticket -> 
             userRepository.findByUsername(username).map(user -> {
                 ticket.setAssignedTo(user);
-                ticket.setStatus("EN_PROGRESO");
+                ticket.setStatus(TicketStatus.EN_PROGRESO);
                 return mapToResponse(ticketRepository.save(ticket));
             })
         );
@@ -143,9 +150,13 @@ public class TicketService {
         dto.setAiPriority(ticket.getAiPriority());
         dto.setAiTone(ticket.getAiTone());
         dto.setAiSummary(ticket.getAiSummary());
-        dto.setAttachmentUrl(ticket.getAttachmentUrl());
+        if (ticket.getAttachmentUrl() != null && !ticket.getAttachmentUrl().isEmpty()) {
+            dto.setAttachmentUrl(storageService.getSignedUrl(ticket.getAttachmentUrl()));
+        } else {
+            dto.setAttachmentUrl(ticket.getAttachmentUrl());
+        }
         dto.setCreatedAt(ticket.getCreatedAt());
-        dto.setStatus(ticket.getStatus());
+        dto.setStatus(ticket.getStatus() != null ? ticket.getStatus().name() : null);
         
         if (ticket.getAssignedTo() != null) {
             dto.setAssignedToUsername(ticket.getAssignedTo().getUsername());

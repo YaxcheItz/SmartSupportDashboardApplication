@@ -36,9 +36,10 @@ public class Ticket {
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // Estado del ticket: ABIERTO, EN_PROGRESO, CERRADO
+    // Estado del ticket
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status = "ABIERTO";
+    private com.yaxcherg.smartsupportdashboard.model.enums.TicketStatus status = com.yaxcherg.smartsupportdashboard.model.enums.TicketStatus.ABIERTO;
 
     @ManyToOne
     @JoinColumn(name = "assigned_to_id")

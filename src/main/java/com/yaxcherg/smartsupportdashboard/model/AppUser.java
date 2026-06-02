@@ -36,7 +36,8 @@ public class AppUser {
     @Size(max = 120)
     private String password;
     
-    private String role = "ROLE_USER";
+    @Enumerated(EnumType.STRING)
+    private com.yaxcherg.smartsupportdashboard.model.enums.UserRole role = com.yaxcherg.smartsupportdashboard.model.enums.UserRole.ROLE_USER;
 
     private String avatarUrl;
 

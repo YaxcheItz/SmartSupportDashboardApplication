@@ -4,6 +4,7 @@ import com.yaxcherg.smartsupportdashboard.dto.TicketRequestDTO;
 import com.yaxcherg.smartsupportdashboard.dto.TicketResponseDTO;
 import com.yaxcherg.smartsupportdashboard.model.AppUser;
 import com.yaxcherg.smartsupportdashboard.model.Ticket;
+import com.yaxcherg.smartsupportdashboard.model.enums.TicketStatus;
 import com.yaxcherg.smartsupportdashboard.repository.TicketRepository;
 import com.yaxcherg.smartsupportdashboard.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +32,9 @@ class TicketServiceTest {
 
     @Mock
     private EmailService emailService;
+    
+    @Mock
+    private SupabaseStorageService storageService;
 
     @InjectMocks
     private TicketService ticketService;
@@ -55,7 +59,7 @@ class TicketServiceTest {
         savedTicket.setTitle("Test Title");
         savedTicket.setDescription("Test Description");
         savedTicket.setCreatedBy(user);
-        savedTicket.setStatus("ABIERTO");
+        savedTicket.setStatus(TicketStatus.ABIERTO);
 
         when(ticketRepository.save(any(Ticket.class))).thenReturn(savedTicket);
 
@@ -76,7 +80,7 @@ class TicketServiceTest {
         ticket.setId(1L);
         ticket.setCustomerEmail("client@example.com");
         ticket.setTitle("Issue");
-        ticket.setStatus("ABIERTO");
+        ticket.setStatus(TicketStatus.ABIERTO);
 
         when(ticketRepository.findById(1L)).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(any(Ticket.class))).thenReturn(ticket);

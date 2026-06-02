@@ -7,6 +7,8 @@ import com.yaxcherg.smartsupportdashboard.model.Ticket;
 import com.yaxcherg.smartsupportdashboard.model.TicketComment;
 import com.yaxcherg.smartsupportdashboard.repository.CommentRepository;
 import com.yaxcherg.smartsupportdashboard.repository.TicketRepository;
+import com.yaxcherg.smartsupportdashboard.model.enums.TicketStatus;
+import com.yaxcherg.smartsupportdashboard.model.enums.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -40,13 +42,13 @@ public class CommentService {
                 .orElseThrow(() -> new RuntimeException("Ticket no encontrado"));
 
         // Lógica de cambio de estado automático
-        if (author.getRole().equals("ROLE_ADMIN") || author.getRole().equals("ROLE_EMPLOYEE")) {
+        if (author.getRole() == UserRole.ROLE_ADMIN || author.getRole() == UserRole.ROLE_EMPLOYEE) {
             // Si responde soporte, marcamos como RESUELTO
-            ticket.setStatus("RESUELTO");
+            ticket.setStatus(TicketStatus.RESUELTO);
         } else {
             // Si responde el cliente y estaba cerrado/resuelto, lo reabrimos
-            if ("RESUELTO".equals(ticket.getStatus()) || "CERRADO".equals(ticket.getStatus())) {
-                ticket.setStatus("ABIERTO");
+            if (ticket.getStatus() == TicketStatus.RESUELTO || ticket.getStatus() == TicketStatus.CERRADO) {
+                ticket.setStatus(TicketStatus.ABIERTO);
             }
         }
         ticketRepository.save(ticket);
@@ -69,7 +71,7 @@ public class CommentService {
         dto.setId(comment.getId());
         dto.setContent(comment.getContent());
         dto.setAuthorUsername(comment.getAuthor().getUsername());
-        dto.setAuthorRole(comment.getAuthor().getRole());
+        dto.setAuthorRole(comment.getAuthor().getRole().name());
         dto.setCreatedAt(comment.getCreatedAt());
         return dto;
     }

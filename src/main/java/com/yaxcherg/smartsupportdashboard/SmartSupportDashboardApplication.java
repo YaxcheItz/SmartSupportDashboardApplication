@@ -2,6 +2,8 @@ package com.yaxcherg.smartsupportdashboard;
 
 import com.yaxcherg.smartsupportdashboard.model.AppUser;
 import com.yaxcherg.smartsupportdashboard.model.Ticket;
+import com.yaxcherg.smartsupportdashboard.model.enums.TicketStatus;
+import com.yaxcherg.smartsupportdashboard.model.enums.UserRole;
 import com.yaxcherg.smartsupportdashboard.repository.TicketRepository;
 import com.yaxcherg.smartsupportdashboard.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -32,17 +34,17 @@ public class SmartSupportDashboardApplication {
             if (userRepository.count() == 0) {
                 // Admin
                 AppUser admin = new AppUser("admin", "admin@gmail.com", passwordEncoder.encode("admin123"));
-                admin.setRole("ROLE_ADMIN");
+                admin.setRole(UserRole.ROLE_ADMIN);
                 userRepository.save(admin);
 
                 // Agente
                 AppUser agent = new AppUser("agente", "agente@gmail.com", passwordEncoder.encode("agente123"));
-                agent.setRole("ROLE_EMPLOYEE");
+                agent.setRole(UserRole.ROLE_EMPLOYEE);
                 userRepository.save(agent);
 
                 // Cliente/Usuario común
                 AppUser user = new AppUser("cliente", "cliente@gmail.com", passwordEncoder.encode("cliente123"));
-                user.setRole("ROLE_USER");
+                user.setRole(UserRole.ROLE_USER);
                 userRepository.save(user);
 
                 System.out.println("✅ Se han insertado 3 usuarios de prueba (admin, agente, cliente).");
@@ -59,6 +61,7 @@ public class SmartSupportDashboardApplication {
                 t1.setDescription("No puedo entrar a mi cuenta desde ayer.");
                 t1.setCustomerEmail("cliente@gmail.com");
                 t1.setCreatedBy(testUser); // Relacionar con el usuario
+                t1.setStatus(TicketStatus.ABIERTO);
                 t1.setAiCategory("Soporte Técnico");
                 t1.setAiPriority("Alta");
                 t1.setAiTone("Frustrado");
@@ -70,6 +73,7 @@ public class SmartSupportDashboardApplication {
                 t2.setDescription("¿Por qué me cobraron doble este mes?");
                 t2.setCustomerEmail("cliente@gmail.com");
                 t2.setCreatedBy(testUser); // Relacionar con el usuario
+                t2.setStatus(TicketStatus.ABIERTO);
                 t2.setAiCategory("Facturación");
                 t2.setAiPriority("Media");
                 t2.setAiTone("Preocupado");
