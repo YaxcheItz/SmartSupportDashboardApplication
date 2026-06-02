@@ -4,9 +4,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
@@ -21,10 +22,10 @@ public class SupabaseStorageService {
     @Value("${supabase.key}")
     private String supabaseKey;
 
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
 
-    public SupabaseStorageService() {
-        this.restTemplate = new RestTemplate();
+    public SupabaseStorageService(RestClient.Builder restClientBuilder) {
+        this.restClient = restClientBuilder.build();
     }
 
     public String uploadFile(MultipartFile file) throws Exception {
@@ -39,47 +40,40 @@ public class SupabaseStorageService {
         String fileName = UUID.randomUUID().toString() + extension;
         String endpoint = supabaseUrl + "/storage/v1/object/" + bucketName + "/" + fileName;
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + supabaseKey);
-        headers.set("apikey", supabaseKey);
-        headers.set("Content-Type", file.getContentType() != null ? file.getContentType() : "application/octet-stream");
+        String response = restClient.post()
+                .uri(endpoint)
+                .header("Authorization", "Bearer " + supabaseKey)
+                .header("apikey", supabaseKey)
+                .contentType(MediaType.parseMediaType(file.getContentType() != null ? file.getContentType() : "application/octet-stream"))
+                .body(file.getBytes())
+                .retrieve()
+                .body(String.class);
 
-        HttpEntity<byte[]> requestEntity = new HttpEntity<>(file.getBytes(), headers);
-
-        ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.POST, requestEntity, String.class);
-
-        if (response.getStatusCode().is2xxSuccessful()) {
-            // Enterprise Fix: Devolver SOLO el nombre de archivo, no la URL pública.
-            // Así la BD guarda 'c94f...jpg' y luego pedimos una URL firmada dinámicamente.
-            return fileName;
-        } else {
-            throw new RuntimeException("Error al subir el archivo a Supabase: " + response.getBody());
-        }
+        // Si llega aquí sin lanzar excepción, es porque fue exitoso
+        return fileName;
     }
 
     public String getSignedUrl(String fileName) {
         if (fileName == null || fileName.isEmpty()) return null;
-        if (fileName.startsWith("http")) return fileName; // Retrocompatibilidad para archivos antiguos
+        if (fileName.startsWith("http")) return fileName;
         
         String bucketName = "ticket-attachments";
         String endpoint = supabaseUrl + "/storage/v1/object/sign/" + bucketName + "/" + fileName;
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + supabaseKey);
-        headers.set("apikey", supabaseKey);
-        headers.set("Content-Type", "application/json");
-
-        // Solicitamos que el enlace expire en 1 hora (3600 segundos)
-        String requestBody = "{\"expiresIn\": 3600}";
-        HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
-
         try {
-            ResponseEntity<Map> response = restTemplate.exchange(endpoint, HttpMethod.POST, requestEntity, Map.class);
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                // Supabase devuelve {"signedURL": "/object/sign/..."}
-                String partialUrl = (String) response.getBody().get("signedURL");
-                
-                // IMPORTANTE: Si la URL parcial no trae el prefijo /storage/v1, hay que añadirlo
+            Map<String, Object> requestBody = Map.of("expiresIn", 3600);
+            
+            Map response = restClient.post()
+                    .uri(endpoint)
+                    .header("Authorization", "Bearer " + supabaseKey)
+                    .header("apikey", supabaseKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(requestBody)
+                    .retrieve()
+                    .body(Map.class);
+
+            if (response != null && response.containsKey("signedURL")) {
+                String partialUrl = (String) response.get("signedURL");
                 if (!partialUrl.startsWith("/storage/v1")) {
                     return supabaseUrl + "/storage/v1" + partialUrl;
                 }

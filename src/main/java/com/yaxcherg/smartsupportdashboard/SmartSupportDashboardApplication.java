@@ -17,6 +17,8 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import org.springframework.web.client.RestClient;
+
 @SpringBootApplication
 @EnableAsync
 @EnableScheduling
@@ -25,6 +27,11 @@ public class SmartSupportDashboardApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(SmartSupportDashboardApplication.class, args);
+    }
+
+    @Bean
+    public RestClient.Builder restClientBuilder() {
+        return RestClient.builder();
     }
 
     @Bean
