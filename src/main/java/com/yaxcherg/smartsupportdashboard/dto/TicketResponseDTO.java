@@ -3,6 +3,8 @@ package com.yaxcherg.smartsupportdashboard.dto;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+import java.util.List;
+
 @Data
 public class TicketResponseDTO {
 
@@ -16,7 +18,7 @@ public class TicketResponseDTO {
     private String aiPriority;
     private String aiTone;
     private String aiSummary;
-    private String attachmentUrl;
+    private List<String> attachmentUrls;
 
     // Metadatos
     private LocalDateTime createdAt;

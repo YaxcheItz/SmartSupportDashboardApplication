@@ -37,12 +37,14 @@
       <div class="content-box original-desc">
         {{ ticket()?.description }}
         
-        <!-- IMAGEN ADJUNTA -->
-        <div *ngIf="ticket()?.attachmentUrl" class="attachment-preview">
-          <p class="attachment-label">📎 Archivo Adjunto:</p>
-          <a [href]="ticket()?.attachmentUrl" target="_blank">
-            <img [src]="ticket()?.attachmentUrl" alt="Archivo adjunto" class="img-attachment">
-          </a>
+        <!-- IMÁGENES ADJUNTAS (MÚLTIPLES) -->
+        <div *ngIf="ticket()?.attachmentUrls && ticket()?.attachmentUrls!.length > 0" class="attachments-list-section">
+          <p class="attachment-label">📎 Archivos Adjuntos ({{ ticket()?.attachmentUrls?.length }}):</p>
+          <div class="attachments-grid">
+            <a *ngFor="let url of ticket()?.attachmentUrls" [href]="url" target="_blank" class="attachment-item">
+              <img [src]="url" alt="Adjunto" class="img-attachment-thumb">
+            </a>
+          </div>
         </div>
       </div>
       <div class="reporter-info">

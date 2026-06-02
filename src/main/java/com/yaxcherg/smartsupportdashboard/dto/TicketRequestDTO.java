@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class TicketRequestDTO {
 
@@ -20,5 +22,5 @@ public class TicketRequestDTO {
     @Email(message = "Debe ser un formato de correo electrónico válido")
     private String customerEmail;
     
-    private String attachmentUrl;
+    private List<String> attachmentFileNames;
 }

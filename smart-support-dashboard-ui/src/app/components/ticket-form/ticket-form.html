@@ -72,9 +72,9 @@
         </div>
       </div>
 
-      <!-- CAMPO: IMAGEN ADJUNTA -->
+      <!-- CAMPO: IMÁGENES ADJUNTAS (MULTIPLE) -->
       <div class="form-group file-upload-group">
-        <label for="attachment">Adjuntar Imagen (Opcional)</label>
+        <label for="attachment">Adjuntar Imágenes (Opcional)</label>
         <div class="file-input-wrapper">
           <input 
             type="file" 
@@ -83,18 +83,23 @@
             accept="image/png, image/jpeg, image/jpg, image/gif"
             class="hidden-file-input"
             #fileInput
+            multiple
           >
           <div class="file-custom-ui" (click)="fileInput.click()">
             <span class="file-icon">📎</span>
-            <span class="file-text">{{ selectedFile ? selectedFile.name : 'Haz clic para seleccionar una imagen' }}</span>
+            <span class="file-text">Haz clic para seleccionar una o más imágenes</span>
           </div>
         </div>
-        <p class="file-hint">Formatos soportados: JPG, PNG, GIF. Máximo 5MB.</p>
+        <p class="file-hint">Formatos soportados: JPG, PNG, GIF. Máximo 5MB por archivo.</p>
 
-        <!-- PREVIEW DE IMAGEN -->
-        <div class="file-preview-container" *ngIf="filePreview">
-          <img [src]="filePreview" alt="Vista previa del adjunto" class="img-preview">
-          <button type="button" (click)="removeFile()" class="btn-remove-file">✖</button>
+        <!-- LISTA DE PREVIEWS -->
+        <div class="files-preview-grid" *ngIf="selectedFiles.length > 0">
+          <div class="file-preview-item" *ngFor="let fileObj of selectedFiles; let i = index">
+            <img *ngIf="fileObj.preview" [src]="fileObj.preview" alt="Preview" class="img-preview-small">
+            <div *ngIf="!fileObj.preview" class="file-icon-placeholder">📄</div>
+            <span class="file-name-mini">{{ fileObj.file.name }}</span>
+            <button type="button" (click)="removeFile(i)" class="btn-remove-mini">✖</button>
+          </div>
         </div>
       </div>
 

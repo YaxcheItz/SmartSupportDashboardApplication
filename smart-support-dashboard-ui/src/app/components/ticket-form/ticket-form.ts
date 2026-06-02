@@ -10,7 +10,12 @@ import { TicketService } from '../../services/ticket';
 import { ToastService } from '../../services/toast';
 import { AuthService } from '../../services/auth';
 import { Router } from '@angular/router';
-import { Subject, Subscription, debounceTime, distinctUntilChanged, switchMap, filter, of } from 'rxjs';
+import { Subject, Subscription, debounceTime, distinctUntilChanged, switchMap, filter, of, forkJoin } from 'rxjs';
+
+interface FileWithPreview {
+  file: File;
+  preview: string | null;
+}
 
 @Component({
   selector: 'app-ticket-form',
@@ -22,8 +27,7 @@ import { Subject, Subscription, debounceTime, distinctUntilChanged, switchMap, f
 export class TicketForm implements OnInit, OnDestroy {
   ticketForm: FormGroup;
   isSubmitting = false;
-  selectedFile: File | null = null;
-  filePreview: string | ArrayBuffer | null = null;
+  selectedFiles: FileWithPreview[] = [];
 
   // IA Prevención
   quickSolution: string | null = null;
@@ -88,61 +92,65 @@ export class TicketForm implements OnInit, OnDestroy {
   }
 
   onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) { // Límite de 5MB
-        this.toastService.showError('El archivo es demasiado grande. Máximo 5MB.');
-        return;
-      }
-      this.selectedFile = file;
+    const files: FileList = event.target.files;
+    if (files && files.length > 0) {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.size > 5 * 1024 * 1024) {
+          this.toastService.showError(`"${file.name}" es demasiado grande. Máximo 5MB.`);
+          continue;
+        }
 
-      // Generar vista previa si es imagen
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = e => this.filePreview = reader.result;
-        reader.readAsDataURL(file);
-      } else {
-        this.filePreview = null;
+        const fileObj: FileWithPreview = { file, preview: null };
+        this.selectedFiles.push(fileObj);
+
+        // Generar vista previa si es imagen
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = e => fileObj.preview = reader.result as string;
+          reader.readAsDataURL(file);
+        }
       }
     }
   }
 
-  removeFile() {
-    this.selectedFile = null;
-    this.filePreview = null;
+  removeFile(index: number) {
+    this.selectedFiles.splice(index, 1);
   }
 
   onSubmit() {
-    if (this.ticketForm.valid) {
-      this.isSubmitting = true;
-      this.cdr.detectChanges();
+    if (this.ticketForm.invalid) return;
+    
+    this.isSubmitting = true;
+    this.cdr.detectChanges();
 
-      if (this.selectedFile) {
-        // Primero subir la imagen
-        this.ticketService.uploadFile(this.selectedFile).subscribe({
-          next: (res) => {
-            // Guardar ticket con URL de imagen
-            this.saveTicket(res.url);
-          },
-          error: (err) => {
-            this.isSubmitting = false;
-            this.cdr.detectChanges();
-            this.toastService.showError('Error al subir el archivo adjunto.');
-            console.error('Error subiendo archivo', err);
-          }
-        });
-      } else {
-        // Guardar sin imagen
-        this.saveTicket();
-      }
+    if (this.selectedFiles.length > 0) {
+      // Subir todos los archivos en paralelo usando forkJoin
+      const uploadTasks = this.selectedFiles.map(f => this.ticketService.uploadFile(f.file));
+      
+      forkJoin(uploadTasks).subscribe({
+        next: (responses) => {
+          // Extraemos los nombres de archivos (ahora el backend devuelve solo el path/nombre)
+          const fileNames = responses.map(res => res.url); 
+          this.saveTicket(fileNames);
+        },
+        error: (err) => {
+          this.isSubmitting = false;
+          this.cdr.detectChanges();
+          this.toastService.showError('Error al subir los archivos adjuntos.');
+          console.error('Error subiendo archivos', err);
+        }
+      });
+    } else {
+      this.saveTicket([]);
     }
   }
 
-  private saveTicket(attachmentUrl?: string) {
-    const ticketData = { ...this.ticketForm.value };
-    if (attachmentUrl) {
-      ticketData.attachmentUrl = attachmentUrl;
-    }
+  private saveTicket(attachmentFileNames: string[]) {
+    const ticketData = { 
+      ...this.ticketForm.value,
+      attachmentFileNames: attachmentFileNames
+    };
 
     this.ticketService.createTicket(ticketData).subscribe({
       next: (response) => {

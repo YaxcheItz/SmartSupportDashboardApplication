@@ -50,9 +50,14 @@ public class TicketService {
         ticket.setTitle(ticketDTO.getTitle());
         ticket.setDescription(ticketDTO.getDescription());
         ticket.setCustomerEmail(ticketDTO.getCustomerEmail());
-        ticket.setAttachmentUrl(ticketDTO.getAttachmentUrl());
         ticket.setStatus(TicketStatus.ABIERTO);
-        ticket.setCreatedBy(createdBy); // Asignar el creador del ticket
+        ticket.setCreatedBy(createdBy);
+
+        if (ticketDTO.getAttachmentFileNames() != null) {
+            for (String fileName : ticketDTO.getAttachmentFileNames()) {
+                ticket.addAttachment(fileName);
+            }
+        }
         
         Ticket savedTicket = ticketRepository.save(ticket);
         
@@ -150,11 +155,17 @@ public class TicketService {
         dto.setAiPriority(ticket.getAiPriority());
         dto.setAiTone(ticket.getAiTone());
         dto.setAiSummary(ticket.getAiSummary());
-        if (ticket.getAttachmentUrl() != null && !ticket.getAttachmentUrl().isEmpty()) {
-            dto.setAttachmentUrl(storageService.getSignedUrl(ticket.getAttachmentUrl()));
-        } else {
-            dto.setAttachmentUrl(ticket.getAttachmentUrl());
+        
+        // Convertir todos los adjuntos a URLs firmadas
+        List<String> signedUrls = new ArrayList<>();
+        if (ticket.getAttachments() != null && !ticket.getAttachments().isEmpty()) {
+            for (com.yaxcherg.smartsupportdashboard.model.TicketAttachment att : ticket.getAttachments()) {
+                String signed = storageService.getSignedUrl(att.getFileName());
+                if (signed != null) signedUrls.add(signed);
+            }
         }
+        dto.setAttachmentUrls(signedUrls);
+
         dto.setCreatedAt(ticket.getCreatedAt());
         dto.setStatus(ticket.getStatus() != null ? ticket.getStatus().name() : null);
         

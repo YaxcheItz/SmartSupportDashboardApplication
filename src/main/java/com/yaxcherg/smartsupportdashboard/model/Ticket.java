@@ -3,14 +3,16 @@ package com.yaxcherg.smartsupportdashboard.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
-@Entity // Le dice a Spring que esta clase será una tabla en la base de datos
-@Data // Magia de Lombok: Crea getters, setters y constructores automáticamente por detrás
-@Table(name = "tickets") // Opcional, pero buena práctica para nombrar la tabla en plural
+@Entity 
+@Data 
+@Table(name = "tickets")
 public class Ticket {
 
-    @Id // Esta es la llave primaria (Primary Key)
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Autoincrementable (1, 2, 3...)
+    @Id 
+    @GeneratedValue(strategy = GenerationType.IDENTITY) 
     private Long id;
 
     @Column(nullable = false)
@@ -21,22 +23,21 @@ public class Ticket {
 
     private String customerEmail;
 
-    // Estos campos los llenará la IA más adelante
     private String aiCategory;
     private String aiPriority;
     private String aiTone;
     @Column(length = 500)
     private String aiSummary;
 
-    // URL de la imagen adjunta (Supabase Storage)
     @Column(length = 1000)
     private String attachmentUrl;
 
-    // Para saber cuándo se creó el ticket
+    @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TicketAttachment> attachments = new ArrayList<>();
+
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // Estado del ticket
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private com.yaxcherg.smartsupportdashboard.model.enums.TicketStatus status = com.yaxcherg.smartsupportdashboard.model.enums.TicketStatus.ABIERTO;
@@ -48,4 +49,8 @@ public class Ticket {
     @ManyToOne
     @JoinColumn(name = "created_by_id")
     private AppUser createdBy;
+
+    public void addAttachment(String fileName) {
+        attachments.add(new TicketAttachment(fileName, this));
+    }
 }
