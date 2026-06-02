@@ -1,9 +1,9 @@
-<div class="form-wrapper" style="min-height: 70vh;">
-  <div class="form-container" style="max-width: 400px;">
+<div class="form-wrapper">
+  <div class="form-container">
 
     <div class="form-header">
       <div class="header-icon">🛡️</div>
-      <h2 style="font-weight: 800; letter-spacing: -0.02em;">Smart Support Dashboard</h2>
+      <h2>Smart Support Dashboard</h2>
       <p class="subtitle">{{ isLoginMode() ? 'Bienvenido de nuevo. Ingresa tus credenciales.' : 'Crea una cuenta para comenzar a gestionar tickets.' }}</p>
     </div>
 
@@ -26,7 +26,7 @@
         </div>
 
         @if (errorMessage()) {
-          <div class="error-feedback" style="background: rgba(239, 68, 68, 0.1); color: var(--danger-color); padding: 0.75rem; border-radius: var(--radius-md); font-size: 0.85rem; margin-bottom: 1rem; border: 1px solid rgba(239, 68, 68, 0.2); text-align: center;">
+          <div class="error-feedback">
             ⚠️ {{ errorMessage() }}
           </div>
         }
@@ -39,16 +39,16 @@
           }
         </button>
 
-        <div class="quick-access" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
-          <p style="text-align: center; font-size: 0.85rem; color: #888; margin-bottom: 12px;">Acceso rápido para reclutadores:</p>
-          <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-            <button type="button" (click)="quickLogin('admin')" style="background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; color: #3b82f6; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s;">
+        <div class="quick-access">
+          <p>Acceso rápido para reclutadores:</p>
+          <div class="access-buttons">
+            <button type="button" class="btn-access" (click)="quickLogin('admin')">
               👨‍💻 Admin
             </button>
-            <button type="button" (click)="quickLogin('agente')" style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #10b981; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s;">
+            <button type="button" class="btn-access" (click)="quickLogin('agente')">
               🎧 Agente
             </button>
-            <button type="button" (click)="quickLogin('cliente')" style="background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; color: #f59e0b; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s;">
+            <button type="button" class="btn-access" (click)="quickLogin('cliente')">
               👤 Cliente
             </button>
           </div>
@@ -81,7 +81,7 @@
         </div>
 
         @if (errorMessage()) {
-          <div class="error-feedback" style="background: rgba(239, 68, 68, 0.1); color: var(--danger-color); padding: 0.75rem; border-radius: var(--radius-md); font-size: 0.85rem; margin-bottom: 1rem; border: 1px solid rgba(239, 68, 68, 0.2); text-align: center;">
+          <div class="error-feedback">
             ⚠️ {{ errorMessage() }}
           </div>
         }
@@ -96,8 +96,8 @@
       </form>
     }
 
-    <div class="toggle-mode-container" style="text-align: center; margin-top: 15px;">
-      <button type="button" class="toggle-mode-btn" (click)="toggleMode()" style="background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.9em; text-decoration: underline;">
+    <div class="toggle-mode-container">
+      <button type="button" class="toggle-mode-btn" (click)="toggleMode()">
         {{ isLoginMode() ? '¿No tienes cuenta? Regístrate aquí' : '¿Ya tienes cuenta? Inicia sesión' }}
       </button>
     </div>

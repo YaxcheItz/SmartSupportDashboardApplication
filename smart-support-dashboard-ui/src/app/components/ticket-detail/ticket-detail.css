@@ -3,34 +3,50 @@
   max-width: 800px;
   margin: 2rem auto;
   padding: 2.5rem;
-  background: white;
+  background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
 }
 
 .ai-response-section {
-  background: #fdf2f8; /* Un toque muy suave de rosa/púrpura para IA */
-  border: 1px solid #fbcfe8;
+  background: var(--ia-bg);
+  border: 1px solid var(--ia-border);
   padding: 1.5rem;
   border-radius: var(--radius-lg);
   margin: 2rem 0;
 }
 
 .ai-suggestion-box {
-  background: white;
+  background: var(--card-bg);
   padding: 1.25rem;
   border-radius: var(--radius-md);
-  border: 1px solid #fbcfe8;
+  border: 1px solid var(--ia-border);
   font-size: 0.95rem;
 }
 
 .comment-body {
   border-radius: var(--radius-md);
   padding: 1rem;
-  background: #f9fafb;
+  background: var(--bg-subtle);
+  color: var(--text-color);
 }
 
 .my-comment .comment-body {
   background: var(--primary-color);
   color: white;
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 768px) {
+  .detail-container {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+  .detail-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .detail-header h1 {
+    font-size: 1.5rem;
+  }
 }

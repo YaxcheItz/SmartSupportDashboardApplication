@@ -81,7 +81,7 @@
             id="attachment" 
             (change)="onFileSelected($event)" 
             accept="image/png, image/jpeg, image/jpg, image/gif"
-            class="file-input"
+            class="hidden-file-input"
             #fileInput
           >
           <div class="file-custom-ui" (click)="fileInput.click()">
@@ -89,12 +89,12 @@
             <span class="file-text">{{ selectedFile ? selectedFile.name : 'Haz clic para seleccionar una imagen' }}</span>
           </div>
         </div>
-        <p class="file-hint" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Formatos soportados: JPG, PNG, GIF. Máximo 5MB.</p>
+        <p class="file-hint">Formatos soportados: JPG, PNG, GIF. Máximo 5MB.</p>
 
         <!-- PREVIEW DE IMAGEN -->
-        <div class="file-preview-container" *ngIf="filePreview" style="margin-top: 1rem; position: relative; display: inline-block;">
-          <img [src]="filePreview" alt="Vista previa del adjunto" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid var(--border-color);">
-          <button type="button" (click)="removeFile()" style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer;">✖</button>
+        <div class="file-preview-container" *ngIf="filePreview">
+          <img [src]="filePreview" alt="Vista previa del adjunto" class="img-preview">
+          <button type="button" (click)="removeFile()" class="btn-remove-file">✖</button>
         </div>
       </div>
 

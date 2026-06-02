@@ -12,7 +12,7 @@
             <span *ngIf="isUploading()" class="mini-spinner"></span>
           </div>
         </div>
-        <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" style="display: none">
+        <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" class="hidden-file-input">
       </div>
       <h2>Configuración de Perfil</h2>
       <p class="subtitle">Actualiza tu información personal y contraseña.</p>

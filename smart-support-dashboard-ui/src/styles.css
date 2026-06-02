@@ -36,14 +36,18 @@
 /* MODO OSCURO (Mantenido pero con tonos suaves) */
 .dark-theme {
   --bg-color: #0f172a;
+  --bg-subtle: #1e293b;
   --text-color: #f9fafb;
   --text-muted: #94a3b8;
-  --card-bg: #1e293b;
+  --card-bg: #0b1120;
   --border-color: #334155;
   
   --primary-color: #818cf8;
   --primary-hover: #a5b4fc;
   --primary-light: rgba(99, 102, 241, 0.1);
+  
+  --ia-bg: rgba(99, 102, 241, 0.08);
+  --ia-border: rgba(99, 102, 241, 0.2);
 }
 
 /* ESTILOS BASE */
