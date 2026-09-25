@@ -8,5 +8,6 @@ FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 COPY --from=build /app/target/smart-support-dashboard-0.0.1-SNAPSHOT.jar app.jar
 
-# Usamos la variable de entorno PORT que nos da Render
-ENTRYPOINT ["java", "-jar", "-Dserver.port=${PORT}", "app.jar"]
+# Optimización de memoria para Render Free Tier (512 MB) y expansión de $PORT
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError"
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Dserver.port=${PORT:-8080} -jar app.jar"]
